@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MyNina — Nos programmes</title>
+  <meta name="description" content="Découvrez les meilleures télénovelas sur MyNina : Rosalinda, Marimar, Coeurs brûlants et bien d'autres." />
+  <link rel="icon" type="image/png" href="assets/favicon-32.png" />
+  <link rel="apple-touch-icon" href="assets/favicon-180.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="nav nav-overlay">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <img src="assets/logo-mynina-white.png" alt="MyNina" class="nav-logo-img" />
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO vidéo d'accueil -->
+  <section class="media-hero">
+    <video id="hubHeroVideo" class="media-hero-video" muted loop playsinline autoplay preload="metadata"></video>
+    <button class="sound-toggle" id="hubSoundToggle" aria-label="Activer le son"></button>
+    <div class="media-hero-content">
+      <div class="hub-hero-eyebrow reveal">MyNina</div>
+      <h1 class="hub-hero-title reveal reveal-delay-1">Vos télénovelas préférées, en illimité</h1>
+      <p class="hub-hero-sub reveal reveal-delay-2">Découvrez la bande-annonce, le synopsis, et profitez de l'offre pour accéder à votre programme préféré.</p>
+      <button class="scroll-cue reveal reveal-delay-3" id="scrollCue" type="button">Découvrir les programmes ↓</button>
+    </div>
+  </section>
+
+  <!-- Carrousel des 6 programmes -->
+  <section class="carousel-section">
+    <h2 class="section-heading reveal">Tous nos programmes</h2>
+    <div class="carousel-row" id="carouselRow">
+      <button class="carousel-arrow carousel-arrow-left" aria-label="Précédent">‹</button>
+      <div class="program-carousel" id="programCarousel"></div>
+      <button class="carousel-arrow carousel-arrow-right" aria-label="Suivant">›</button>
+    </div>
+  </section>
+
+  <footer class="footer">MyNina — Paiement sécurisé via Mobile Money</footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

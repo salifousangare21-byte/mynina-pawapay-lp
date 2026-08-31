@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MyNina</title>
+  <meta name="description" content="Regardez cette télénovela sur MyNina." />
+  <link rel="icon" type="image/png" href="assets/favicon-32.png" />
+  <link rel="apple-touch-icon" href="assets/favicon-180.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="nav nav-overlay">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <img src="assets/logo-mynina-white.png" alt="MyNina" class="nav-logo-img" />
+      </div>
+      <a href="/" class="nav-back">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        Tous les programmes
+      </a>
+    </div>
+  </header>
+
+  <!-- HERO façon Netflix/Prime : bande-annonce en fond, titre + CTA par-dessus -->
+  <section class="media-hero" id="programHero">
+    <video id="heroVideo" class="media-hero-video" muted loop playsinline autoplay preload="metadata"></video>
+    <button class="sound-toggle" id="heroSoundToggle" aria-label="Activer le son"></button>
+    <div class="media-hero-content">
+      <span class="genre-pill reveal" id="genrePill">—</span>
+      <h1 class="hero-title reveal reveal-delay-1" id="seriesTitle">—</h1>
+      <p class="synopsis-text hero-synopsis reveal reveal-delay-2" id="synopsisText"></p>
+
+      <div class="hero-price-row reveal reveal-delay-3">
+        <span class="price-old" id="regularPrice"></span>
+        <span class="price-new" id="promoPrice"></span>
+        <span class="price-per">/ mois</span>
+      </div>
+      <div class="promo-badge reveal reveal-delay-3" id="promoCountdown"></div>
+      <div class="reveal reveal-delay-4">
+        <button class="btn-primary btn-hero" id="convertCta" type="button">Profiter de l'offre</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Autres programmes -->
+  <section class="carousel-section">
+    <h2 class="section-heading reveal">Autres programmes</h2>
+    <div class="carousel-row" id="otherProgramsRow">
+      <button class="carousel-arrow carousel-arrow-left" aria-label="Précédent">‹</button>
+      <div class="program-carousel" id="otherProgramsCarousel"></div>
+      <button class="carousel-arrow carousel-arrow-right" aria-label="Suivant">›</button>
+    </div>
+  </section>
+
+  <footer class="footer">MyNina — Paiement sécurisé via Mobile Money</footer>
+
+  <!-- POPUP — formulaire simplifié -->
+  <div class="modal-backdrop" id="paymentModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal">
+      <button class="modal-close" id="modalCloseBtn" aria-label="Fermer">✕</button>
+
+      <div class="step-form active" id="stepForm">
+        <div class="modal-eyebrow">MyNina</div>
+        <h3 id="modalTitle">Profitez de l'offre</h3>
+        <p class="modal-sub">Renseignez vos informations pour activer votre abonnement.</p>
+        <div class="promo-badge" id="modalCountdown" style="margin-bottom:18px;"></div>
+
+        <form id="accountForm" novalidate>
+          <div class="field">
+            <label for="fullName">Nom complet*</label>
+            <input id="fullName" name="fullName" type="text" placeholder="Nom complet" required autocomplete="name" />
+          </div>
+          <div class="field">
+            <label for="email">Adresse e-mail*</label>
+            <input id="email" name="email" type="email" placeholder="votre@email.com" required autocomplete="email" />
+          </div>
+          <div class="field">
+            <label for="country">Pays*</label>
+            <select id="country" name="country" required></select>
+          </div>
+          <div class="field">
+            <label for="phone">Numéro Mobile Money*</label>
+            <div class="phone-group">
+              <span class="phone-dial" id="phoneDial">+225</span>
+              <input id="phone" name="phone" type="tel" placeholder="07 00 00 00 00" inputmode="numeric" required autocomplete="tel" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Opérateur*</label>
+            <div class="operator-cards" id="operatorGroup"></div>
+          </div>
+
+          <div class="price-row">
+            <span>Montant à régler</span>
+            <span class="amount" id="priceAmount"></span>
+          </div>
+
+          <button class="btn-primary" id="submitBtn" type="submit" style="width:100%;"></button>
+          <div class="form-note" id="formNote"></div>
+        </form>
+      </div>
+
+      <div class="modal-status" id="stepStatus"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    document.getElementById("submitBtn").textContent = `Profiter de l'offre — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
+  </script>
+</body>
+</html>
