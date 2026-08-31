@@ -3,7 +3,7 @@
    ========================================================================== */
 
 // ⚠️ À remplacer par l'URL réelle du Worker une fois déployé (ex: https://mynina-pawapay.<compte>.workers.dev)
-const WORKER_BASE_URL = "https://mynina-pawapay.WORKERS_SUBDOMAIN.workers.dev";
+const WORKER_BASE_URL = "https://mynina-pawapay.marketing-03f.workers.dev";
 const INITIATE_PAYMENT_URL = `${WORKER_BASE_URL}/api/initiate-payment`;
 const PAYMENT_STATUS_URL = `${WORKER_BASE_URL}/api/payment-status`;
 const POLL_INTERVAL_MS = 3000;
