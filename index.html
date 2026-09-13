@@ -7,8 +7,15 @@
     document.write('<base href="' + (location.pathname.indexOf("/abonnements") === 0 ? "/abonnements/" : "/") + '">');
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MyNina — Nos programmes</title>
-  <meta name="description" content="Découvrez les meilleures télénovelas sur MyNina : Rosalinda, Marimar, Coeurs brûlants et bien d'autres." />
+  <title>Abonnement MyNina — Télénovelas en illimité dès 5 FCFA | Jour, Semaine, Mois</title>
+  <meta name="description" content="Abonnez-vous à MyNina et regardez vos télénovelas préférées en illimité : Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Paiement Mobile Money (Orange, MTN, Moov, Wave), sans engagement, dès 5 FCFA." />
+  <meta name="keywords" content="abonnement mynina, télénovela streaming, mynina.tv, mobile money abonnement, rosalinda streaming, marimar streaming, orange money, mtn momo, moov money, wave, telenovela afrique" />
+  <link rel="canonical" href="https://mynina.tv/abonnements/" />
+  <meta property="og:title" content="Abonnement MyNina — Télénovelas en illimité dès 5 FCFA" />
+  <meta property="og:description" content="Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Paiement Mobile Money, sans engagement." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://mynina.tv/abonnements/" />
+  <meta name="robots" content="index, follow" />
   <link rel="icon" type="image/png" href="assets/favicon-32.png" />
   <link rel="apple-touch-icon" href="assets/favicon-180.png" />
 
@@ -31,14 +38,12 @@
     <video id="hubHeroVideo" class="media-hero-video" muted loop playsinline autoplay preload="metadata"></video>
     <button class="sound-toggle" id="hubSoundToggle" aria-label="Activer le son"></button>
     <div class="media-hero-content">
-      <div class="hub-hero-eyebrow reveal">MyNina</div>
-      <h1 class="hub-hero-title reveal reveal-delay-1">Vos télénovelas préférées, en illimité</h1>
-      <p class="hub-hero-sub reveal reveal-delay-2">Rosalinda, Marimar, Cœurs brûlants et bien d'autres — sur votre mobile, à partir de 5 FCFA, sans engagement.</p>
-      <div class="hero-cta-row reveal reveal-delay-3">
+      <h1 class="hub-hero-title reveal">Vos télénovelas préférées, en illimité</h1>
+      <p class="hub-hero-sub reveal reveal-delay-1">Rosalinda, Marimar, Cœurs brûlants et bien d'autres — sur votre mobile, à partir de 5 FCFA, sans engagement.</p>
+      <div class="hero-cta-row reveal reveal-delay-2">
         <button class="btn-primary btn-hero" id="heroSubscribeCta" type="button">S'abonner</button>
         <button class="hero-cta-secondary" id="heroRenewCta" type="button">Déjà abonné ? Se réabonner</button>
       </div>
-      <button class="scroll-cue reveal reveal-delay-4" id="scrollCue" type="button">Voir les programmes ↓</button>
     </div>
   </section>
 
@@ -146,8 +151,9 @@
             <label for="phone">Numéro Mobile Money*</label>
             <div class="phone-group">
               <span class="phone-dial" id="phoneDial">+225</span>
-              <input id="phone" name="phone" type="tel" placeholder="07 00 00 00 00" inputmode="numeric" required autocomplete="tel" />
+              <input id="phone" name="phone" type="tel" placeholder="0758356184" inputmode="numeric" required autocomplete="tel" />
             </div>
+            <small class="field-hint">L'indicatif est déjà pris en compte — entrez uniquement votre numéro (ex : 0758356184).</small>
           </div>
           <div class="field">
             <label>Opérateur*</label>

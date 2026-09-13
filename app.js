@@ -394,14 +394,43 @@ function renderOperatorCards() {
 }
 
 function isValidEmail(v) { return /^\S+@\S+\.\S+$/.test(v); }
+
+// L'API /registration de Muvi casse sur les caractères accentués (bug confirmé
+// par leur support). On les retire au fil de la saisie plutôt que de bloquer
+// l'utilisateur avec un message d'erreur après coup.
+function stripAccents(v) {
+  return v.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+const fullNameInput = document.getElementById("fullName");
+if (fullNameInput) {
+  fullNameInput.addEventListener("input", (e) => {
+    const cleaned = stripAccents(e.target.value);
+    if (cleaned !== e.target.value) {
+      const pos = e.target.selectionStart;
+      e.target.value = cleaned;
+      e.target.setSelectionRange(pos, pos);
+    }
+  });
+}
+
 // PawaPay attend le numéro local complet, AVEC le 0 initial, accolé à l'indicatif
-// (ex: indicatif 225 + numéro 0758356184 = 2250758356184). On ne retire donc rien.
+// (ex: indicatif 225 + numéro 0758356184 = 2250758356184) — confirmé fonctionnel
+// par un paiement réel. Le seul risque à éviter : que l'utilisateur retape
+// l'indicatif pays en plus (déjà affiché à gauche du champ), ce qui produirait
+// un numéro invalide. On l'en empêche par la limite de longueur ci-dessous,
+// et on retire l'indicatif s'il est quand même tapé par erreur.
 function cleanLocalNumber(v) {
-  return v.replace(/[^\d]/g, "");
+  const digitsOnly = v.replace(/[^\d]/g, "");
+  const dial = COUNTRIES[selectedCountry]?.dial;
+  if (dial && digitsOnly.startsWith(dial) && digitsOnly.length > 9) {
+    return digitsOnly.slice(dial.length);
+  }
+  return digitsOnly;
 }
 
 const phoneInput = document.getElementById("phone");
 if (phoneInput) {
+  phoneInput.setAttribute("maxlength", "10");
   phoneInput.addEventListener("input", (e) => {
     if (e.target.value.includes("@")) {
       formNote.textContent = "⚠️ Ceci ressemble à un e-mail — entrez votre numéro Mobile Money ici.";
@@ -677,11 +706,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const cta = document.getElementById("convertCta");
   if (cta) cta.addEventListener("click", () => openPaymentPopup());
-
-  const scrollCue = document.getElementById("scrollCue");
-  if (scrollCue) scrollCue.addEventListener("click", () => {
-    document.getElementById("carouselRow")?.scrollIntoView({ behavior: "smooth" });
-  });
 
   const heroSubscribeCta = document.getElementById("heroSubscribeCta");
   if (heroSubscribeCta) heroSubscribeCta.addEventListener("click", () => {

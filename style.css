@@ -116,13 +116,6 @@ button { font-family: inherit; cursor: pointer; border: none; }
   text-decoration: underline; text-underline-offset: 3px; transition: color 0.2s ease;
 }
 .hero-cta-secondary:hover { color: var(--text-primary); }
-.scroll-cue {
-  display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary);
-  border: 1px solid var(--border-strong); border-radius: 999px; padding: 10px 18px;
-  transition: border-color 0.2s ease, color 0.2s ease;
-}
-.scroll-cue:hover { border-color: var(--rose); color: var(--text-primary); }
-
 /* ==========================================================================
    Carrousel — 3 cartes visibles, plus grandes, avec animations
    ========================================================================== */
@@ -268,6 +261,7 @@ button { font-family: inherit; cursor: pointer; border: none; }
   color: var(--text-secondary); font-size: 14px; font-weight: 600; white-space: nowrap;
 }
 .phone-group input { flex: 1; min-width: 0; }
+.field-hint { display: block; margin-top: 6px; font-size: 11px; color: var(--text-tertiary); }
 
 .operator-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
 .operator-card {
