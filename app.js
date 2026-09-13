@@ -3,7 +3,7 @@
    ========================================================================== */
 
 // ⚠️ À remplacer par l'URL réelle du Worker une fois déployé (ex: https://mynina-pawapay.<compte>.workers.dev)
-const WORKER_BASE_URL = "https://mynina-pawapay.marketing-03f.workers.dev";
+const WORKER_BASE_URL = "https://mynina-pawapay.WORKERS_SUBDOMAIN.workers.dev";
 const INITIATE_PAYMENT_URL = `${WORKER_BASE_URL}/api/initiate-payment`;
 const PAYMENT_STATUS_URL = `${WORKER_BASE_URL}/api/payment-status`;
 const POLL_INTERVAL_MS = 3000;
@@ -147,7 +147,12 @@ function getSlugFromPath(pathname) {
   const match = pathname.match(/programmes\/([a-z0-9-]+)/i);
   return match ? match[1] : null;
 }
-function programUrl(slug) { return `/programmes/${slug}`; }
+// Détecte automatiquement si le site est servi sous /abonnements (mynina.tv)
+// ou à la racine (ex: mynina-pawapay-lp2.pages.dev, pour les tests directs).
+// Permet d'utiliser exactement le même code dans les deux cas, sans build séparé.
+const BASE_PATH = window.location.pathname.startsWith("/abonnements") ? "/abonnements" : "";
+
+function programUrl(slug) { return `${BASE_PATH}/programmes/${slug}`; }
 
 let currentSlug = getSlugFromPath(window.location.pathname);
 // Filet de sécurité : si on est bien sur une page programme mais que le slug
@@ -596,6 +601,8 @@ async function pollPaymentStatus(depositId, displayPhone, isDebug) {
    Init
    ========================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
+  const navBack = document.getElementById("navBackLink");
+  if (navBack) navBack.href = `${BASE_PATH}/`;
   persistVisitContext();
   renderHub();
   renderCountrySelect();
