@@ -16,16 +16,16 @@ const PLANS = {
 };
 const PLAN_DETAILS = {
   jour: {
-    description: "Accès 24h à tout le catalogue. Idéal pour rattraper un épisode ou découvrir MyNina.",
+    features: ["Accès 24h à tout le catalogue", "Idéal pour rattraper un épisode", "Aucun engagement"],
     cta: "Choisir Jour",
   },
   semaine: {
-    description: "Une semaine complète, sans interruption. Le bon rythme pour suivre une intrigue en entier.",
+    features: ["7 jours d'accès continu", "Le bon rythme pour suivre une intrigue", "Aucun engagement"],
     cta: "Choisir Semaine",
     tag: "La plus choisie",
   },
   mois: {
-    description: "Un mois plein, renouvelable quand vous voulez. Le meilleur rapport temps/prix pour les fans assidus.",
+    features: ["30 jours d'accès complet", "Le meilleur rapport temps/prix", "Aucun engagement"],
     cta: "Choisir Mois",
   },
 };
@@ -443,7 +443,7 @@ if (form) {
       Updated_Date: now,
       Plan_Name: currentPlanLabel(),
       Plan_Price: currentPrice(),
-      Form_Name: `programme_${currentSlug}`,
+      Form_Name: `programme_${currentSlug || "hub"}`,
       Payment_Method: selectedOperator,
       Gclid_Ads: visit.Gclid_Ads,
       Campaign_Name: visit.Campaign_Name,
@@ -459,7 +459,7 @@ if (form) {
       Device_type: visit.Device_type,
       User_agent: visit.User_agent,
       Visit_timestamp: visit.Visit_timestamp,
-      Product_Id: currentSlug,
+      Product_Id: currentSlug || "hub",
     };
 
     // Étape 1 — on demande au Worker d'initier le dépôt PawaPay.
@@ -628,7 +628,9 @@ function renderHubPricingCards() {
         <div class="pricing-name">${plan.label}</div>
         <div class="pricing-price">${plan.price} <span>${PAYMENT_CURRENCY_LABEL}</span></div>
         <div class="pricing-suffix">${plan.suffix}</div>
-        <p class="pricing-description">${details.description}</p>
+        <ul class="pricing-features">
+          ${details.features.map((f) => `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>${f}</li>`).join("")}
+        </ul>
         <button class="btn-primary pricing-cta" type="button" data-plan="${key}" style="width:100%;">${details.cta}</button>
       </div>
     `;
@@ -637,26 +639,17 @@ function renderHubPricingCards() {
   grid.querySelectorAll(".pricing-cta").forEach((btn) => {
     btn.addEventListener("click", () => {
       const plan = btn.dataset.plan;
+      selectedPlan = plan;
       sessionStorage.setItem(PREFERRED_PLAN_KEY, plan);
       track("plan_selected_hub", { plan });
-      updatePlanSelectionBanner();
-      document.getElementById("carouselRow")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      renderPlanCards();
+      if (document.getElementById("priceAmount")) {
+        document.getElementById("priceAmount").textContent = `${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
+      }
+      if (submitBtn) submitBtn.textContent = `Profiter de l'offre — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
+      openPaymentPopup();
     });
   });
-
-  updatePlanSelectionBanner();
-}
-
-function updatePlanSelectionBanner() {
-  const banner = document.getElementById("planSelectionBanner");
-  if (!banner) return;
-  const stored = sessionStorage.getItem(PREFERRED_PLAN_KEY);
-  if (stored && PLANS[stored]) {
-    banner.textContent = `Offre "${PLANS[stored].label}" sélectionnée (${PLANS[stored].price} ${PAYMENT_CURRENCY_LABEL}) — choisissez maintenant votre programme.`;
-    banner.style.display = "block";
-  } else {
-    banner.style.display = "none";
-  }
 }
 
 
@@ -688,5 +681,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const scrollCue = document.getElementById("scrollCue");
   if (scrollCue) scrollCue.addEventListener("click", () => {
     document.getElementById("carouselRow")?.scrollIntoView({ behavior: "smooth" });
+  });
+
+  const heroSubscribeCta = document.getElementById("heroSubscribeCta");
+  if (heroSubscribeCta) heroSubscribeCta.addEventListener("click", () => {
+    document.getElementById("hubPricingGrid")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+  const heroRenewCta = document.getElementById("heroRenewCta");
+  if (heroRenewCta) heroRenewCta.addEventListener("click", () => {
+    track("renew_cta_click", {});
+    document.getElementById("hubPricingGrid")?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 });

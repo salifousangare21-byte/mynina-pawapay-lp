@@ -100,11 +100,22 @@ button { font-family: inherit; cursor: pointer; border: none; }
    ========================================================================== */
 .hub-hero-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--rose); margin-bottom: 12px; }
 .hub-hero-title {
-  font-family: var(--font-display); font-weight: 900;
+  position: relative; font-family: var(--font-display); font-weight: 900;
   font-size: clamp(34px, 7vw, 62px); margin-bottom: 16px;
   text-shadow: 0 4px 24px rgba(0,0,0,0.6);
 }
+.hub-hero-title::before {
+  content: ""; position: absolute; left: -40px; top: -60px; width: 380px; height: 380px;
+  background: radial-gradient(circle, var(--rose-glow) 0%, transparent 70%);
+  z-index: -1; pointer-events: none;
+}
 .hub-hero-sub { color: var(--text-secondary); font-size: 16px; max-width: 520px; margin-bottom: 26px; }
+.hero-cta-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 22px; }
+.hero-cta-secondary {
+  background: none; color: var(--text-secondary); font-size: 14px; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px; transition: color 0.2s ease;
+}
+.hero-cta-secondary:hover { color: var(--text-primary); }
 .scroll-cue {
   display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary);
   border: 1px solid var(--border-strong); border-radius: 999px; padding: 10px 18px;
@@ -323,16 +334,26 @@ button { font-family: inherit; cursor: pointer; border: none; }
 /* ==========================================================================
    Choix de l'offre (page hub)
    ========================================================================== */
-.pricing-section { padding: 40px 64px 20px; max-width: 1100px; margin: 0 auto; text-align: center; }
+.pricing-section { position: relative; padding: 40px 64px 20px; max-width: 1100px; margin: 0 auto; text-align: center; }
+.pricing-section::before {
+  content: ""; position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+  width: 700px; height: 400px; background: radial-gradient(ellipse, rgba(255,22,93,0.12) 0%, transparent 70%);
+  z-index: -1; pointer-events: none;
+}
 .pricing-intro { color: var(--text-secondary); font-size: 15px; max-width: 480px; margin: 0 auto 32px; }
-.pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: start; }
 .pricing-card {
   position: relative; background: var(--bg-panel); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 32px 22px 26px; text-align: left;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 .pricing-card:hover { transform: translateY(-4px); }
-.pricing-card.is-highlighted { border-color: var(--rose); box-shadow: 0 20px 50px var(--rose-glow); }
+.pricing-card.is-highlighted {
+  border-color: var(--rose); box-shadow: 0 24px 60px var(--rose-glow);
+  background: linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+  transform: scale(1.05); z-index: 1;
+}
+.pricing-card.is-highlighted:hover { transform: scale(1.05) translateY(-4px); }
 .pricing-tag {
   position: absolute; top: -13px; left: 22px; background: var(--rose); color: #fff;
   font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 999px;
@@ -340,8 +361,13 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .pricing-name { font-family: var(--font-display); font-size: 18px; font-weight: 700; margin-bottom: 10px; }
 .pricing-price { font-family: var(--font-display); font-weight: 800; font-size: 34px; color: var(--rose); line-height: 1; }
 .pricing-price span { font-size: 15px; font-weight: 600; color: var(--text-secondary); }
-.pricing-suffix { color: var(--text-tertiary); font-size: 12px; margin-bottom: 16px; }
-.pricing-description { color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 22px; min-height: 62px; }
+.pricing-suffix { color: var(--text-tertiary); font-size: 12px; margin-bottom: 18px; }
+.pricing-features { list-style: none; margin-bottom: 22px; min-height: 84px; }
+.pricing-features li {
+  display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-secondary);
+  margin-bottom: 9px; line-height: 1.4;
+}
+.pricing-features li svg { width: 15px; height: 15px; flex: 0 0 auto; margin-top: 2px; color: var(--success); }
 
 /* ==========================================================================
    Pourquoi s'abonner
@@ -368,11 +394,7 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .trust-logos { display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap; }
 .trust-logos img { height: 30px; width: auto; background: #fff; border-radius: 6px; padding: 4px 8px; }
 
-.plan-selection-banner {
-  margin: 0 64px 18px; padding: 10px 16px; background: rgba(255, 22, 93, 0.1);
-  border: 1px solid rgba(255, 22, 93, 0.3); border-radius: var(--radius-sm);
-  color: var(--text-primary); font-size: 13px;
-}
+.carousel-subheading { padding: 0 64px; color: var(--text-secondary); font-size: 14px; margin-top: -12px; margin-bottom: 8px; }
 
 /* ==========================================================================
    FAQ
@@ -395,7 +417,9 @@ button { font-family: inherit; cursor: pointer; border: none; }
 @media (max-width: 720px) {
   .pricing-section, .benefits-section, .faq-section { padding-left: 20px; padding-right: 20px; }
   .pricing-grid, .benefits-section { grid-template-columns: 1fr; }
-  .plan-selection-banner { margin-left: 20px; margin-right: 20px; }
+  .pricing-card.is-highlighted, .pricing-card.is-highlighted:hover { transform: none; }
+  .carousel-subheading { padding-left: 20px; padding-right: 20px; }
+  .hero-cta-row { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
 
 .footer { padding: 40px 20px 56px; text-align: center; color: var(--text-tertiary); font-size: 12px; border-top: 1px solid var(--border); }
