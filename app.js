@@ -3,22 +3,27 @@
    ========================================================================== */
 
 // ⚠️ À remplacer par l'URL réelle du Worker une fois déployé (ex: https://mynina-pawapay.<compte>.workers.dev)
-const WORKER_BASE_URL = "https://mynina-pawapay.marketing-03f.workers.dev";
+const WORKER_BASE_URL = "https://mynina-pawapay.WORKERS_SUBDOMAIN.workers.dev";
 const INITIATE_PAYMENT_URL = `${WORKER_BASE_URL}/api/initiate-payment`;
 const PAYMENT_STATUS_URL = `${WORKER_BASE_URL}/api/payment-status`;
 const POLL_INTERVAL_MS = 3000;
 const POLL_MAX_ATTEMPTS = 30; // ~90s d'attente avant timeout affiché à l'utilisateur
 
-const REGULAR_PRICE = 3200;
-const PROMO_PRICE = 5; // ⚠️ Prix de test temporaire — remettre 2000 avant le lancement réel
-const PROMO_END = new Date("2026-09-25T23:59:59+00:00");
+const PLANS = {
+  jour:    { label: "Jour",    price: 5,  suffix: "/ jour" },
+  semaine: { label: "Semaine", price: 10, suffix: "/ semaine" },
+  mois:    { label: "Mois",    price: 15, suffix: "/ mois" },
+};
+const DEFAULT_PLAN = "mois";
+let selectedPlan = DEFAULT_PLAN;
+
 const PAYMENT_CURRENCY = "XOF";
 const PAYMENT_CURRENCY_LABEL = "FCFA";
-const PLAN_NAME = "Mensuel";
 const SHARED_TRAILER = "assets/videos/trailer.mp4";
 
-function isPromoActive() { return new Date() < PROMO_END; }
-function currentPrice() { return isPromoActive() ? PROMO_PRICE : REGULAR_PRICE; }
+function currentPlan() { return PLANS[selectedPlan]; }
+function currentPrice() { return currentPlan().price; }
+function currentPlanLabel() { return currentPlan().label; }
 
 const PROGRAMS = {
   "rosalinda": {
@@ -244,15 +249,12 @@ function renderProgramPage() {
   const synopsisEl = document.getElementById("synopsisText");
   if (synopsisEl) synopsisEl.textContent = currentProgram.synopsis;
 
-  const regularPriceEl = document.getElementById("regularPrice");
-  if (regularPriceEl) regularPriceEl.textContent = `${REGULAR_PRICE} ${PAYMENT_CURRENCY_LABEL}`;
-  const promoPriceEl = document.getElementById("promoPrice");
-  if (promoPriceEl) promoPriceEl.textContent = `${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
+  const priceEl = document.getElementById("heroPrice");
+  if (priceEl) priceEl.textContent = `${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
+  const priceSuffixEl = document.getElementById("heroPriceSuffix");
+  if (priceSuffixEl) priceSuffixEl.textContent = currentPlan().suffix;
   const priceAmountEl = document.getElementById("priceAmount");
   if (priceAmountEl) priceAmountEl.textContent = `${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
-
-  renderCountdown("promoCountdown");
-  renderCountdown("modalCountdown");
 
   const otherSlugs = Object.keys(PROGRAMS).filter((s) => s !== currentSlug);
   renderCarousel("otherProgramsRow", "otherProgramsCarousel", otherSlugs);
@@ -262,23 +264,29 @@ function renderProgramPage() {
 }
 
 /* ==========================================================================
-   Compte à rebours promo
+   Sélection de l'offre (Jour / Semaine / Mois)
    ========================================================================== */
-function renderCountdown(elId) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  if (!isPromoActive()) { el.style.display = "none"; return; }
-  function tick() {
-    const diff = PROMO_END - new Date();
-    if (diff <= 0) { el.style.display = "none"; return; }
-    const d = Math.floor(diff / 86400000);
-    const h = Math.floor((diff % 86400000) / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    el.textContent = `Offre valable ${d}j ${h}h ${m}m ${s}s`;
-  }
-  tick();
-  setInterval(tick, 1000);
+function renderPlanCards() {
+  const wrap = document.getElementById("planGroup");
+  if (!wrap) return;
+  wrap.innerHTML = Object.entries(PLANS).map(([key, plan]) => `
+    <label class="plan-card ${key === selectedPlan ? "is-selected" : ""}">
+      <input type="radio" name="plan" value="${key}" ${key === selectedPlan ? "checked" : ""}/>
+      <div class="plan-name">${plan.label}</div>
+      <div class="plan-price">${plan.price} ${PAYMENT_CURRENCY_LABEL}</div>
+    </label>
+  `).join("");
+  wrap.querySelectorAll(".plan-card").forEach((card) => {
+    card.querySelector("input").addEventListener("change", () => {
+      selectedPlan = card.querySelector("input").value;
+      wrap.querySelectorAll(".plan-card").forEach((el) => el.classList.remove("is-selected"));
+      card.classList.add("is-selected");
+      const priceAmountEl = document.getElementById("priceAmount");
+      if (priceAmountEl) priceAmountEl.textContent = `${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
+      if (submitBtn) submitBtn.textContent = `Profiter de l'offre — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
+      track("plan_selected", { program: currentSlug, plan: selectedPlan });
+    });
+  });
 }
 
 /* ==========================================================================
@@ -325,6 +333,22 @@ function renderCountrySelect() {
   if (dialEl) dialEl.textContent = `+${COUNTRIES[DEFAULT_COUNTRY].dial}`;
 }
 
+const OPERATOR_LOGOS = {
+  ORANGE_CIV: "assets/payment-methods/orange-money.png",
+  ORANGE_SEN: "assets/payment-methods/orange-money.png",
+  ORANGE_CMR: "assets/payment-methods/orange-money.png",
+  ORANGE_BFA: "assets/payment-methods/orange-money.png",
+  MTN_MOMO_CIV: "assets/payment-methods/mtn-momo.png",
+  MTN_MOMO_CMR: "assets/payment-methods/mtn-momo.png",
+  MTN_MOMO_BEN: "assets/payment-methods/mtn-momo.png",
+  MOOV_CIV: "assets/payment-methods/moov-money.png",
+  MOOV_BEN: "assets/payment-methods/moov-money.png",
+  MOOV_BFA: "assets/payment-methods/moov-money.png",
+  WAVE_CIV: "assets/payment-methods/wave.png",
+  WAVE_SEN: "assets/payment-methods/wave.png",
+  // ⚠️ FREE_SEN : pas de logo fourni — affichage par initiale en attendant.
+};
+
 function renderOperatorCards() {
   const wrap = document.getElementById("operatorGroup");
   if (!wrap) return;
@@ -333,7 +357,9 @@ function renderOperatorCards() {
   wrap.innerHTML = operators.map((op, i) => `
     <label class="operator-card ${i === 0 ? "is-selected" : ""}">
       <input type="radio" name="operator" value="${op.code}" ${i === 0 ? "checked" : ""}/>
-      <div class="operator-badge" style="background:${op.color};">${op.label.charAt(0)}</div>
+      ${OPERATOR_LOGOS[op.code]
+        ? `<img class="operator-logo" src="${OPERATOR_LOGOS[op.code]}" alt="${op.label}" />`
+        : `<div class="operator-badge" style="background:${op.color};">${op.label.charAt(0)}</div>`}
       <div class="operator-name">${op.label}</div>
     </label>
   `).join("");
@@ -394,7 +420,7 @@ if (form) {
       Phone_Number: localNumber,
       Created_Date: now,
       Updated_Date: now,
-      Plan_Name: PLAN_NAME,
+      Plan_Name: currentPlanLabel(),
       Plan_Price: currentPrice(),
       Form_Name: `programme_${currentSlug}`,
       Payment_Method: selectedOperator,
@@ -549,6 +575,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderHub();
   renderCountrySelect();
   renderOperatorCards();
+  renderPlanCards();
   renderProgramPage();
   setupSoundToggle("hubHeroVideo", "hubSoundToggle");
   setupSoundToggle("heroVideo", "heroSoundToggle");

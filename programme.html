@@ -36,11 +36,9 @@
       <p class="synopsis-text hero-synopsis reveal reveal-delay-2" id="synopsisText"></p>
 
       <div class="hero-price-row reveal reveal-delay-3">
-        <span class="price-old" id="regularPrice"></span>
-        <span class="price-new" id="promoPrice"></span>
-        <span class="price-per">/ mois</span>
+        <span class="price-new" id="heroPrice"></span>
+        <span class="price-per" id="heroPriceSuffix"></span>
       </div>
-      <div class="promo-badge reveal reveal-delay-3" id="promoCountdown"></div>
       <div class="reveal reveal-delay-4">
         <button class="btn-primary btn-hero" id="convertCta" type="button">Profiter de l'offre</button>
       </div>
@@ -68,9 +66,12 @@
         <div class="modal-eyebrow">MyNina</div>
         <h3 id="modalTitle">Profitez de l'offre</h3>
         <p class="modal-sub">Renseignez vos informations pour activer votre abonnement.</p>
-        <div class="promo-badge" id="modalCountdown" style="margin-bottom:18px;"></div>
 
         <form id="accountForm" novalidate>
+          <div class="field">
+            <label>Choisissez votre offre*</label>
+            <div class="plan-cards" id="planGroup"></div>
+          </div>
           <div class="field">
             <label for="fullName">Nom complet*</label>
             <input id="fullName" name="fullName" type="text" placeholder="Nom complet" required autocomplete="name" />
