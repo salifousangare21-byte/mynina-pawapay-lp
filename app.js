@@ -3,7 +3,7 @@
    ========================================================================== */
 
 // ⚠️ À remplacer par l'URL réelle du Worker une fois déployé (ex: https://mynina-pawapay.<compte>.workers.dev)
-const WORKER_BASE_URL = "https://mynina-pawapay.marketing-03f.workers.dev";
+const WORKER_BASE_URL = "https://mynina-pawapay.WORKERS_SUBDOMAIN.workers.dev";
 const INITIATE_PAYMENT_URL = `${WORKER_BASE_URL}/api/initiate-payment`;
 const PAYMENT_STATUS_URL = `${WORKER_BASE_URL}/api/payment-status`;
 const POLL_INTERVAL_MS = 3000;
@@ -471,6 +471,14 @@ if (form) {
       return;
     }
 
+    // Abonnement déjà actif détecté par le Worker AVANT tout débit PawaPay —
+    // aucun paiement n'a été tenté, donc pas de remboursement à gérer.
+    if (initData.status === "ALREADY_SUBSCRIBED") {
+      track("already_subscribed", { program: currentSlug, plan: initData.plan });
+      showAlreadySubscribedState(initData.plan, initData.expiresAt);
+      return;
+    }
+
     // REJECTED / DUPLICATE_IGNORED sans depositId exploitable → on arrête tout de suite,
     // pas de compte créé, pas de faux message de succès.
     if (initData.status === "REJECTED" || !initData.depositId) {
@@ -504,6 +512,23 @@ function showSuccessState() {
     <h4>Paiement confirmé</h4>
     <p>Votre abonnement MyNina est en cours d'activation. Vous recevrez un e-mail et un message WhatsApp de confirmation d'ici quelques instants.</p>
   `;
+}
+
+function showAlreadySubscribedState(plan, expiresAt) {
+  const planLabel = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : "en cours";
+  const dateLabel = expiresAt
+    ? new Date(expiresAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+  stepForm.classList.remove("active");
+  stepStatus.classList.add("active", "show", "is-failed");
+  stepStatus.classList.remove("is-pending", "is-success");
+  stepStatus.innerHTML = `
+    <div class="status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+    <h4>Vous avez déjà un abonnement actif</h4>
+    <p>Votre offre ${planLabel} est valable${dateLabel ? ` jusqu'au ${dateLabel}` : " actuellement"}. Aucun paiement n'a été effectué.</p>
+    <button class="btn-primary" id="closeAlreadySubBtn" type="button" style="width:100%;">Fermer</button>
+  `;
+  document.getElementById("closeAlreadySubBtn")?.addEventListener("click", closePaymentPopup);
 }
 
 function showFailedState(reason) {
