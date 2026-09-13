@@ -14,7 +14,23 @@ const PLANS = {
   semaine: { label: "Semaine", price: 10, suffix: "/ semaine" },
   mois:    { label: "Mois",    price: 15, suffix: "/ mois" },
 };
+const PLAN_DETAILS = {
+  jour: {
+    description: "Accès 24h à tout le catalogue. Idéal pour rattraper un épisode ou découvrir MyNina.",
+    cta: "Choisir Jour",
+  },
+  semaine: {
+    description: "Une semaine complète, sans interruption. Le bon rythme pour suivre une intrigue en entier.",
+    cta: "Choisir Semaine",
+    tag: "La plus choisie",
+  },
+  mois: {
+    description: "Un mois plein, renouvelable quand vous voulez. Le meilleur rapport temps/prix pour les fans assidus.",
+    cta: "Choisir Mois",
+  },
+};
 const DEFAULT_PLAN = "mois";
+const PREFERRED_PLAN_KEY = "mynina_preferred_plan";
 let selectedPlan = DEFAULT_PLAN;
 
 const PAYMENT_CURRENCY = "XOF";
@@ -598,13 +614,67 @@ async function pollPaymentStatus(depositId, displayPhone, isDebug) {
 }
 
 /* ==========================================================================
+   Page hub — choix de l'offre (avant de choisir un programme)
+   ========================================================================== */
+function renderHubPricingCards() {
+  const grid = document.getElementById("hubPricingGrid");
+  if (!grid) return;
+
+  grid.innerHTML = Object.entries(PLANS).map(([key, plan]) => {
+    const details = PLAN_DETAILS[key];
+    return `
+      <div class="pricing-card ${details.tag ? "is-highlighted" : ""}">
+        ${details.tag ? `<div class="pricing-tag">${details.tag}</div>` : ""}
+        <div class="pricing-name">${plan.label}</div>
+        <div class="pricing-price">${plan.price} <span>${PAYMENT_CURRENCY_LABEL}</span></div>
+        <div class="pricing-suffix">${plan.suffix}</div>
+        <p class="pricing-description">${details.description}</p>
+        <button class="btn-primary pricing-cta" type="button" data-plan="${key}" style="width:100%;">${details.cta}</button>
+      </div>
+    `;
+  }).join("");
+
+  grid.querySelectorAll(".pricing-cta").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const plan = btn.dataset.plan;
+      sessionStorage.setItem(PREFERRED_PLAN_KEY, plan);
+      track("plan_selected_hub", { plan });
+      updatePlanSelectionBanner();
+      document.getElementById("carouselRow")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  updatePlanSelectionBanner();
+}
+
+function updatePlanSelectionBanner() {
+  const banner = document.getElementById("planSelectionBanner");
+  if (!banner) return;
+  const stored = sessionStorage.getItem(PREFERRED_PLAN_KEY);
+  if (stored && PLANS[stored]) {
+    banner.textContent = `Offre "${PLANS[stored].label}" sélectionnée (${PLANS[stored].price} ${PAYMENT_CURRENCY_LABEL}) — choisissez maintenant votre programme.`;
+    banner.style.display = "block";
+  } else {
+    banner.style.display = "none";
+  }
+}
+
+
+/* ==========================================================================
    Init
    ========================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
   const navBack = document.getElementById("navBackLink");
   if (navBack) navBack.href = `${BASE_PATH}/`;
   persistVisitContext();
+
+  // Si une offre a été choisie sur le hub (/abonnements), on la pré-sélectionne
+  // dans le popup de paiement du programme choisi ensuite.
+  const preferredPlan = sessionStorage.getItem(PREFERRED_PLAN_KEY);
+  if (preferredPlan && PLANS[preferredPlan]) selectedPlan = preferredPlan;
+
   renderHub();
+  renderHubPricingCards();
   renderCountrySelect();
   renderOperatorCards();
   renderPlanCards();

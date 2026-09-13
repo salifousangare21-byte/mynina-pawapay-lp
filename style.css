@@ -320,6 +320,84 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .step-form, .step-status { display: none; }
 .step-form.active, .step-status.active { display: block; }
 
+/* ==========================================================================
+   Choix de l'offre (page hub)
+   ========================================================================== */
+.pricing-section { padding: 40px 64px 20px; max-width: 1100px; margin: 0 auto; text-align: center; }
+.pricing-intro { color: var(--text-secondary); font-size: 15px; max-width: 480px; margin: 0 auto 32px; }
+.pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.pricing-card {
+  position: relative; background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 32px 22px 26px; text-align: left;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.pricing-card:hover { transform: translateY(-4px); }
+.pricing-card.is-highlighted { border-color: var(--rose); box-shadow: 0 20px 50px var(--rose-glow); }
+.pricing-tag {
+  position: absolute; top: -13px; left: 22px; background: var(--rose); color: #fff;
+  font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 999px;
+}
+.pricing-name { font-family: var(--font-display); font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+.pricing-price { font-family: var(--font-display); font-weight: 800; font-size: 34px; color: var(--rose); line-height: 1; }
+.pricing-price span { font-size: 15px; font-weight: 600; color: var(--text-secondary); }
+.pricing-suffix { color: var(--text-tertiary); font-size: 12px; margin-bottom: 16px; }
+.pricing-description { color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 22px; min-height: 62px; }
+
+/* ==========================================================================
+   Pourquoi s'abonner
+   ========================================================================== */
+.benefits-section {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+  max-width: 1100px; margin: 0 auto; padding: 48px 64px;
+}
+.benefit { text-align: center; }
+.benefit-icon {
+  width: 48px; height: 48px; margin: 0 auto 14px; border-radius: 50%;
+  background: var(--bg-panel-2); display: flex; align-items: center; justify-content: center;
+  color: var(--rose);
+}
+.benefit-icon svg { width: 22px; height: 22px; }
+.benefit h3 { font-family: var(--font-display); font-size: 15px; margin-bottom: 6px; }
+.benefit p { color: var(--text-secondary); font-size: 13px; line-height: 1.6; max-width: 260px; margin: 0 auto; }
+
+/* ==========================================================================
+   Confiance paiement
+   ========================================================================== */
+.trust-section { text-align: center; padding: 20px 20px 8px; }
+.trust-label { color: var(--text-tertiary); font-size: 12px; margin-bottom: 16px; }
+.trust-logos { display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap; }
+.trust-logos img { height: 30px; width: auto; background: #fff; border-radius: 6px; padding: 4px 8px; }
+
+.plan-selection-banner {
+  margin: 0 64px 18px; padding: 10px 16px; background: rgba(255, 22, 93, 0.1);
+  border: 1px solid rgba(255, 22, 93, 0.3); border-radius: var(--radius-sm);
+  color: var(--text-primary); font-size: 13px;
+}
+
+/* ==========================================================================
+   FAQ
+   ========================================================================== */
+.faq-section { max-width: 820px; margin: 0 auto; padding: 40px 64px 60px; }
+.faq-list { display: flex; flex-direction: column; gap: 10px; }
+.faq-item {
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 16px 18px;
+}
+.faq-item summary {
+  cursor: pointer; font-weight: 600; font-size: 14px; list-style: none;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after { content: "+"; color: var(--rose); font-size: 18px; margin-left: 12px; }
+.faq-item[open] summary::after { content: "–"; }
+.faq-item p { color: var(--text-secondary); font-size: 13px; line-height: 1.7; margin-top: 12px; }
+
+@media (max-width: 720px) {
+  .pricing-section, .benefits-section, .faq-section { padding-left: 20px; padding-right: 20px; }
+  .pricing-grid, .benefits-section { grid-template-columns: 1fr; }
+  .plan-selection-banner { margin-left: 20px; margin-right: 20px; }
+}
+
 .footer { padding: 40px 20px 56px; text-align: center; color: var(--text-tertiary); font-size: 12px; border-top: 1px solid var(--border); }
 
 @media (max-width: 560px) {
