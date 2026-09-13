@@ -2,6 +2,12 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
+  <script>
+    // Corrige la résolution des chemins relatifs (style.css, assets/...) quelle que soit
+    // la profondeur de l'URL affichée (ex: /programmes/rosalinda) ou le sous-répertoire
+    // de déploiement (ex: mynina.tv/abonnements). Doit s'exécuter AVANT tout <link>/<script src>.
+    document.write('<base href="' + (location.pathname.indexOf("/abonnements") === 0 ? "/abonnements/" : "/") + '">');
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MyNina</title>
   <meta name="description" content="Regardez cette télénovela sur MyNina." />

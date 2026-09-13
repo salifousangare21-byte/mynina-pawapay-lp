@@ -2,6 +2,10 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
+  <script>
+    // Voir programme.html pour l'explication complète de cette correction.
+    document.write('<base href="' + (location.pathname.indexOf("/abonnements") === 0 ? "/abonnements/" : "/") + '">');
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MyNina — Nos programmes</title>
   <meta name="description" content="Découvrez les meilleures télénovelas sur MyNina : Rosalinda, Marimar, Coeurs brûlants et bien d'autres." />
