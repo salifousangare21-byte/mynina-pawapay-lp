@@ -213,29 +213,19 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .btn-hero { font-size: 16px; padding: 16px 32px; }
 
 /* ==========================================================================
-   Popup compte + paiement
+   Formulaire de paiement — section statique (plus de popup, pour la stabilité
+   mobile : les overlays position:fixed sont une source classique de bugs avec
+   le clavier virtuel et le défilement sur mobile Safari/Chrome).
    ========================================================================== */
-.modal-backdrop {
-  position: fixed; inset: 0; background: rgba(6, 3, 9, 0.75); backdrop-filter: blur(8px);
-  display: none; align-items: center; justify-content: center; padding: 20px; z-index: 100;
-}
-.modal-backdrop.show { display: flex; }
-.modal {
-  width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto;
+.payment-section { padding: 40px 16px 60px; display: flex; justify-content: center; }
+.payment-card {
+  width: 100%; max-width: 440px;
   background: var(--bg-panel); border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg); padding: 30px; box-shadow: var(--shadow-soft); position: relative;
-  animation: modalIn 0.3s ease;
+  border-radius: var(--radius-lg); padding: 30px; box-shadow: var(--shadow-soft);
 }
-@keyframes modalIn { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
-.modal-close {
-  position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06); display: flex; align-items: center; justify-content: center;
-  color: var(--text-secondary); font-size: 18px; transition: background 0.2s ease;
-}
-.modal-close:hover { background: rgba(255,255,255,0.14); }
 .modal-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--rose); font-weight: 700; margin-bottom: 10px; }
-.modal h3 { font-family: var(--font-display); font-size: 24px; margin-bottom: 6px; }
-.modal .modal-sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 22px; }
+.payment-card h3 { font-family: var(--font-display); font-size: 24px; margin-bottom: 6px; }
+.payment-card .modal-sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 22px; }
 
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
@@ -307,18 +297,18 @@ button { font-family: inherit; cursor: pointer; border: none; }
 
 .modal-status { display: none; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 10px 0 4px; }
 .modal-status.show { display: flex; }
-.spinner { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--border-strong); border-top-color: var(--rose); animation: spin 0.9s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
 .modal-status h4 { font-family: var(--font-display); font-size: 19px; }
 .modal-status p { color: var(--text-secondary); font-size: 13px; max-width: 300px; }
 .modal-status.is-success .status-icon { color: var(--success); }
 .modal-status.is-failed .status-icon { color: var(--danger); }
 .status-icon svg { width: 46px; height: 46px; }
-.status-spinner {
-  width: 46px; height: 46px; border-radius: 50%;
-  border: 3px solid rgba(183, 174, 192, 0.25);
-  border-top-color: var(--success);
-  animation: status-spin 0.8s linear infinite;
+/* Spinner en SVG plutôt qu'en CSS pur (bordure animée) : bien plus stable sur
+   mobile — l'astuce "border-color qui tourne" est connue pour scintiller ou se
+   figer sur Safari iOS et certains Chrome Android, surtout pendant un scroll. */
+.status-spinner { width: 46px; height: 46px; animation: status-spin 1s linear infinite; transform-origin: center; }
+.status-spinner circle {
+  fill: none; stroke: var(--success); stroke-width: 4; stroke-linecap: round;
+  stroke-dasharray: 85 150;
 }
 @keyframes status-spin { to { transform: rotate(360deg); } }
 
@@ -422,4 +412,6 @@ button { font-family: inherit; cursor: pointer; border: none; }
   .btn-primary { width: 100%; }
   .hero-price-row { flex-wrap: wrap; }
   .media-hero { min-height: 82vh; }
+  .payment-section { padding: 28px 10px 44px; }
+  .payment-card { padding: 22px 18px; }
 }

@@ -79,14 +79,11 @@ const COUNTRIES = {
     operators: [
       { code: "ORANGE_CIV", label: "Orange Money", color: "#FF7900" },
       { code: "MTN_MOMO_CIV", label: "MTN Money", color: "#FFCC00" },
-      { code: "MOOV_CIV", label: "Moov Money", color: "#0072CE" },
-      { code: "WAVE_CIV", label: "Wave", color: "#1DC8CD" },
     ] },
   SEN: { name: "Sénégal", flag: "🇸🇳", dial: "221", currency: "XOF",
     operators: [
       { code: "ORANGE_SEN", label: "Orange Money", color: "#FF7900" },
       { code: "FREE_SEN", label: "Free Money", color: "#7B2FF7" },
-      { code: "WAVE_SEN", label: "Wave", color: "#1DC8CD" },
     ] },
   CMR: { name: "Cameroun", flag: "🇨🇲", dial: "237", currency: "XAF",
     operators: [
@@ -311,9 +308,9 @@ function renderPlanCards() {
 }
 
 /* ==========================================================================
-   Popup — formulaire (sans mot de passe) + message SMS
+   Formulaire de paiement — section statique (plus de popup), pour la stabilité mobile
    ========================================================================== */
-const modal = document.getElementById("paymentModal");
+const paymentSection = document.getElementById("paymentSection");
 const stepForm = document.getElementById("stepForm");
 const stepStatus = document.getElementById("stepStatus");
 const form = document.getElementById("accountForm");
@@ -323,19 +320,20 @@ const submitBtn = document.getElementById("submitBtn");
 let selectedCountry = DEFAULT_COUNTRY;
 let selectedOperator = COUNTRIES[DEFAULT_COUNTRY].operators[0].code;
 
+// Anciennement "openPaymentPopup" : fait défiler jusqu'au formulaire (toujours
+// présent dans la page) et réinitialise son état — ne bascule plus de visibilité.
 function openPaymentPopup() {
-  if (!modal) return;
-  modal.classList.add("show");
+  if (!paymentSection) return;
   stepForm.classList.add("active");
   stepStatus.classList.remove("active", "show");
   formNote.textContent = "";
+  paymentSection.scrollIntoView({ behavior: "smooth", block: "start" });
   track("payment_popup_open", { program: currentSlug });
 }
-function closePaymentPopup() { modal.classList.remove("show"); }
-
-if (modal) {
-  document.getElementById("modalCloseBtn")?.addEventListener("click", closePaymentPopup);
-  modal.addEventListener("click", (e) => { if (e.target === modal) closePaymentPopup(); });
+// Remet le formulaire visible après un échec/succès — remplace l'ancienne fermeture de popup.
+function closePaymentPopup() {
+  stepStatus.classList.remove("active", "show");
+  stepForm.classList.add("active");
 }
 
 function renderCountrySelect() {
@@ -362,12 +360,12 @@ const OPERATOR_LOGOS = {
   MTN_MOMO_CIV: "assets/payment-methods/mtn-momo.png",
   MTN_MOMO_CMR: "assets/payment-methods/mtn-momo.png",
   MTN_MOMO_BEN: "assets/payment-methods/mtn-momo.png",
-  MOOV_CIV: "assets/payment-methods/moov-money.png",
   MOOV_BEN: "assets/payment-methods/moov-money.png",
   MOOV_BFA: "assets/payment-methods/moov-money.png",
-  WAVE_CIV: "assets/payment-methods/wave.png",
-  WAVE_SEN: "assets/payment-methods/wave.png",
-  // ⚠️ FREE_SEN : pas de logo fourni — affichage par initiale en attendant.
+  // ⚠️ Moov (CIV/SEN) et Wave (CIV/SEN) retirés le temps de leur activation
+  // côté PawaPay (Moov : pas encore live sur ces deux pays ; Wave : nécessite
+  // une entité juridique locale — en attente de confirmation/documents juridiques).
+  // FREE_SEN : pas de logo fourni — affichage par initiale en attendant.
 };
 
 function renderOperatorCards() {
@@ -548,7 +546,7 @@ function showPendingState(displayPhone) {
   stepStatus.classList.add("active", "show", "is-pending");
   stepStatus.classList.remove("is-success", "is-failed");
   stepStatus.innerHTML = `
-    <div class="status-icon status-spinner"></div>
+    <svg class="status-spinner" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20"></circle></svg>
     <h4>Vérifiez votre téléphone</h4>
     <p>Vous avez reçu une demande de confirmation au <strong>${displayPhone}</strong> pour valider votre paiement de ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}. Entrez votre code PIN Mobile Money pour continuer — cette page se met à jour automatiquement.</p>
   `;
@@ -576,7 +574,7 @@ function showAlreadySubscribedState(plan, expiresAt) {
     <div class="status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
     <h4>Vous avez déjà un abonnement actif</h4>
     <p>Votre offre ${planLabel} est valable${dateLabel ? ` jusqu'au ${dateLabel}` : " actuellement"}. Aucun paiement n'a été effectué.</p>
-    <button class="btn-primary" id="closeAlreadySubBtn" type="button" style="width:100%;">Fermer</button>
+    <button class="btn-primary" id="closeAlreadySubBtn" type="button" style="width:100%;">Retour</button>
   `;
   document.getElementById("closeAlreadySubBtn")?.addEventListener("click", closePaymentPopup);
 }
