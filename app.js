@@ -93,6 +93,18 @@ const DEFAULT_COUNTRY = "CIV";
 /* ==========================================================================
    Tracking (dataLayer + UTMs + contexte de visite)
    ========================================================================== */
+// Filet de sécurité pour la hauteur du hero : certains navigateurs intégrés
+// (WhatsApp, Instagram, TikTok in-app — fréquents pour des clics publicitaires
+// mobile) gèrent mal dvh/vh. On fixe la hauteur réelle mesurée en JS, qui
+// fonctionne partout, et on la met à jour au redimensionnement/rotation.
+function setHeroHeightFallback() {
+  document.querySelectorAll(".media-hero").forEach((hero) => {
+    hero.style.minHeight = `${Math.round(window.innerHeight * 0.92)}px`;
+  });
+}
+window.addEventListener("resize", setHeroHeightFallback);
+window.addEventListener("orientationchange", setHeroHeightFallback);
+
 window.dataLayer = window.dataLayer || [];
 function track(event, payload) { window.dataLayer.push(Object.assign({ event }, payload || {})); }
 
@@ -649,6 +661,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderProgramPage();
   setupSoundToggle("hubHeroVideo", "hubSoundToggle");
   setupSoundToggle("heroVideo", "heroSoundToggle");
+  setHeroHeightFallback();
 
   const cta = document.getElementById("convertCta");
   if (cta) cta.addEventListener("click", () => openPaymentPopup());

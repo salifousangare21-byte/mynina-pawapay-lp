@@ -316,10 +316,14 @@ button { font-family: inherit; cursor: pointer; border: none; }
 /* ==========================================================================
    Choix de l'offre (page hub)
    ========================================================================== */
-.pricing-section { position: relative; padding: 40px 64px 20px; max-width: 1100px; margin: 0 auto; text-align: center; }
+.pricing-section {
+  position: relative; padding: 40px 64px 20px; max-width: 1100px; margin: 0 auto; text-align: center;
+  overflow: hidden; /* barrière propre, indépendante du overflow-x du <body> — Safari iOS ne
+                        contient pas toujours fiablement un enfant absolu à l'échelle du body seul */
+}
 .pricing-section::before {
   content: ""; position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
-  width: 700px; height: 400px; background: radial-gradient(ellipse, rgba(255,22,93,0.12) 0%, transparent 70%);
+  width: min(700px, 100vw); height: 400px; background: radial-gradient(ellipse, rgba(255,22,93,0.12) 0%, transparent 70%);
   z-index: -1; pointer-events: none;
 }
 .pricing-intro { color: var(--text-secondary); font-size: 15px; max-width: 480px; margin: 0 auto 32px; }
