@@ -8,7 +8,7 @@
     // de déploiement (ex: mynina.tv/abonnements). Doit s'exécuter AVANT tout <link>/<script src>.
     document.write('<base href="' + (location.pathname.indexOf("/abonnements") === 0 ? "/abonnements/" : "/") + '">');
   </script>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>MyNina</title>
   <meta name="description" content="Regardez cette télénovela sur MyNina." />
   <link rel="icon" type="image/png" href="assets/favicon-32.png" />
@@ -44,9 +44,10 @@
       <div class="hero-price-row reveal reveal-delay-3">
         <span class="price-new" id="heroPrice"></span>
         <span class="price-per" id="heroPriceSuffix"></span>
+        <span class="trial-badge">7 jours inclus</span>
       </div>
       <div class="reveal reveal-delay-4">
-        <button class="btn-primary btn-hero" id="convertCta" type="button">Profiter de l'offre</button>
+        <button class="btn-primary btn-hero" id="convertCta" type="button">S'abonner</button>
       </div>
     </div>
   </section>
@@ -68,14 +69,10 @@
     <div class="payment-card">
       <div class="step-form active" id="stepForm">
         <div class="modal-eyebrow">MyNina</div>
-        <h3 id="modalTitle">Profitez de l'offre</h3>
-        <p class="modal-sub">Renseignez vos informations pour activer votre abonnement.</p>
+        <h3 id="modalTitle">S'abonner à MyNina</h3>
+        <p class="modal-sub">3 200 FCFA/mois, 7 premiers jours inclus. Renseignez vos informations pour activer votre abonnement.</p>
 
         <form id="accountForm" novalidate>
-          <div class="field">
-            <label>Choisissez votre offre*</label>
-            <div class="plan-cards" id="planGroup"></div>
-          </div>
           <div class="field">
             <label for="fullName">Nom complet*</label>
             <input id="fullName" name="fullName" type="text" placeholder="Nom complet" required autocomplete="name" />
@@ -118,7 +115,7 @@
 
   <script src="app.js"></script>
   <script>
-    document.getElementById("submitBtn").textContent = `Profiter de l'offre — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
+    document.getElementById("submitBtn").textContent = `S'abonner — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}/mois`;
   </script>
 </body>
 </html>

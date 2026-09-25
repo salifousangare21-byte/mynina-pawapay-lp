@@ -9,37 +9,22 @@ const PAYMENT_STATUS_URL = `${WORKER_BASE_URL}/api/payment-status`;
 const POLL_INTERVAL_MS = 3000;
 const POLL_MAX_ATTEMPTS = 30; // ~90s d'attente avant timeout affiché à l'utilisateur
 
-const PLANS = {
-  jour:    { label: "Jour",    price: 5,  suffix: "/ jour" },
-  semaine: { label: "Semaine", price: 10, suffix: "/ semaine" },
-  mois:    { label: "Mois",    price: 15, suffix: "/ mois" },
-};
-const PLAN_DETAILS = {
-  jour: {
-    features: ["Accès 24h à tout le catalogue", "Idéal pour rattraper un épisode", "Aucun engagement"],
-    cta: "Choisir Jour",
-  },
-  semaine: {
-    features: ["7 jours d'accès continu", "Le bon rythme pour suivre une intrigue", "Aucun engagement"],
-    cta: "Choisir Semaine",
-    tag: "La plus choisie",
-  },
-  mois: {
-    features: ["30 jours d'accès complet", "Le meilleur rapport temps/prix", "Aucun engagement"],
-    cta: "Choisir Mois",
-  },
-};
-const DEFAULT_PLAN = "mois";
-const PREFERRED_PLAN_KEY = "mynina_preferred_plan";
-let selectedPlan = DEFAULT_PLAN;
-
+// Offre unique — remplace l'ancien système à 3 paliers (Jour/Semaine/Mois).
+// Le prix réel facturé (3 200 FCFA) correspond à l'équivalent de 4,90€ déjà
+// utilisé comme référence commerciale ailleurs (site principal mynina.tv).
+// Important : PawaPay ne gère aucun prélèvement récurrent — il n'y a donc pas
+// de "vrai" essai gratuit sans paiement. Le client règle le mois complet dès
+// l'inscription ; les "7 premiers jours" sont un argument commercial qui
+// souligne que ces jours sont déjà inclus dans le mois payé, pas un délai de
+// gratuité suivi d'un prélèvement automatique (techniquement impossible ici).
+const PLAN = { label: "Mensuel", price: 3200, suffix: "/ mois", trialDays: 7 };
 const PAYMENT_CURRENCY = "XOF";
 const PAYMENT_CURRENCY_LABEL = "FCFA";
 const SHARED_TRAILER = "assets/videos/trailer.mp4";
 
-function currentPlan() { return PLANS[selectedPlan]; }
-function currentPrice() { return currentPlan().price; }
-function currentPlanLabel() { return currentPlan().label; }
+function currentPlan() { return PLAN; }
+function currentPrice() { return PLAN.price; }
+function currentPlanLabel() { return PLAN.label; }
 
 const PROGRAMS = {
   "rosalinda": {
@@ -79,6 +64,8 @@ const COUNTRIES = {
     operators: [
       { code: "ORANGE_CIV", label: "Orange Money", color: "#FF7900" },
       { code: "MTN_MOMO_CIV", label: "MTN Money", color: "#FFCC00" },
+      { code: "MOOV_CIV", label: "Moov Money", color: "#0072CE" },
+      { code: "WAVE_CIV", label: "Wave", color: "#1DC8CD" },
     ] },
   SEN: { name: "Sénégal", flag: "🇸🇳", dial: "221", currency: "XOF",
     operators: [
@@ -282,32 +269,6 @@ function renderProgramPage() {
 }
 
 /* ==========================================================================
-   Sélection de l'offre (Jour / Semaine / Mois)
-   ========================================================================== */
-function renderPlanCards() {
-  const wrap = document.getElementById("planGroup");
-  if (!wrap) return;
-  wrap.innerHTML = Object.entries(PLANS).map(([key, plan]) => `
-    <label class="plan-card ${key === selectedPlan ? "is-selected" : ""}">
-      <input type="radio" name="plan" value="${key}" ${key === selectedPlan ? "checked" : ""}/>
-      <div class="plan-name">${plan.label}</div>
-      <div class="plan-price">${plan.price} ${PAYMENT_CURRENCY_LABEL}</div>
-    </label>
-  `).join("");
-  wrap.querySelectorAll(".plan-card").forEach((card) => {
-    card.querySelector("input").addEventListener("change", () => {
-      selectedPlan = card.querySelector("input").value;
-      wrap.querySelectorAll(".plan-card").forEach((el) => el.classList.remove("is-selected"));
-      card.classList.add("is-selected");
-      const priceAmountEl = document.getElementById("priceAmount");
-      if (priceAmountEl) priceAmountEl.textContent = `${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
-      if (submitBtn) submitBtn.textContent = `Profiter de l'offre — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
-      track("plan_selected", { program: currentSlug, plan: selectedPlan });
-    });
-  });
-}
-
-/* ==========================================================================
    Formulaire de paiement — section statique (plus de popup), pour la stabilité mobile
    ========================================================================== */
 const paymentSection = document.getElementById("paymentSection");
@@ -360,11 +321,14 @@ const OPERATOR_LOGOS = {
   MTN_MOMO_CIV: "assets/payment-methods/mtn-momo.png",
   MTN_MOMO_CMR: "assets/payment-methods/mtn-momo.png",
   MTN_MOMO_BEN: "assets/payment-methods/mtn-momo.png",
+  MOOV_CIV: "assets/payment-methods/moov-money.png",
   MOOV_BEN: "assets/payment-methods/moov-money.png",
   MOOV_BFA: "assets/payment-methods/moov-money.png",
-  // ⚠️ Moov (CIV/SEN) et Wave (CIV/SEN) retirés le temps de leur activation
-  // côté PawaPay (Moov : pas encore live sur ces deux pays ; Wave : nécessite
-  // une entité juridique locale — en attente de confirmation/documents juridiques).
+  WAVE_CIV: "assets/payment-methods/wave.png",
+  // ⚠️ Wave Sénégal reste en attente (statut juridique de l'entité non confirmé
+  // côté PawaPay) — non réintégré tant que non confirmé actif.
+  // ⚠️ Le fichier wave.png actuel est un visuel provisoire, pas le vrai logo
+  // Wave — à remplacer dès que le bon fichier est disponible.
   // FREE_SEN : pas de logo fourni — affichage par initiale en attendant.
 };
 
@@ -511,7 +475,7 @@ if (form) {
     } catch (err) {
       console.error("[initiate-payment] erreur:", err);
       submitBtn.disabled = false;
-      submitBtn.textContent = `Profiter de l'offre — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
+      submitBtn.textContent = `S'abonner — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}/mois`;
       formNote.style.color = "var(--danger)";
       formNote.textContent = isDebug
         ? `[debug] erreur réseau — ${err.message}`
@@ -592,7 +556,7 @@ function showFailedState(reason) {
     stepStatus.classList.remove("active", "show", "is-failed");
     stepForm.classList.add("active");
     submitBtn.disabled = false;
-    submitBtn.textContent = `Profiter de l'offre — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
+    submitBtn.textContent = `S'abonner — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}/mois`;
   });
 }
 
@@ -641,41 +605,31 @@ async function pollPaymentStatus(depositId, displayPhone, isDebug) {
 }
 
 /* ==========================================================================
-   Page hub — choix de l'offre (avant de choisir un programme)
+   Page hub — présentation de l'offre unique
    ========================================================================== */
 function renderHubPricingCards() {
   const grid = document.getElementById("hubPricingGrid");
   if (!grid) return;
 
-  grid.innerHTML = Object.entries(PLANS).map(([key, plan]) => {
-    const details = PLAN_DETAILS[key];
-    return `
-      <div class="pricing-card ${details.tag ? "is-highlighted" : ""}">
-        ${details.tag ? `<div class="pricing-tag">${details.tag}</div>` : ""}
-        <div class="pricing-name">${plan.label}</div>
-        <div class="pricing-price">${plan.price} <span>${PAYMENT_CURRENCY_LABEL}</span></div>
-        <div class="pricing-suffix">${plan.suffix}</div>
-        <ul class="pricing-features">
-          ${details.features.map((f) => `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>${f}</li>`).join("")}
-        </ul>
-        <button class="btn-primary pricing-cta" type="button" data-plan="${key}" style="width:100%;">${details.cta}</button>
-      </div>
-    `;
-  }).join("");
+  grid.innerHTML = `
+    <div class="pricing-card is-highlighted">
+      <div class="pricing-tag">${PLAN.trialDays} jours inclus</div>
+      <div class="pricing-name">Abonnement ${PLAN.label}</div>
+      <div class="pricing-price">${PLAN.price} <span>${PAYMENT_CURRENCY_LABEL}</span></div>
+      <div class="pricing-suffix">${PLAN.suffix}, sans engagement</div>
+      <ul class="pricing-features">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Vos ${PLAN.trialDays} premiers jours inclus dès l'inscription</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Accès illimité à tout le catalogue</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Résiliable à tout moment, sans engagement</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Paiement 100% Mobile Money</li>
+      </ul>
+      <button class="btn-primary pricing-cta" type="button" style="width:100%;">S'abonner</button>
+    </div>
+  `;
 
-  grid.querySelectorAll(".pricing-cta").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const plan = btn.dataset.plan;
-      selectedPlan = plan;
-      sessionStorage.setItem(PREFERRED_PLAN_KEY, plan);
-      track("plan_selected_hub", { plan });
-      renderPlanCards();
-      if (document.getElementById("priceAmount")) {
-        document.getElementById("priceAmount").textContent = `${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
-      }
-      if (submitBtn) submitBtn.textContent = `Profiter de l'offre — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
-      openPaymentPopup();
-    });
+  grid.querySelector(".pricing-cta")?.addEventListener("click", () => {
+    track("plan_selected_hub", { plan: "mensuel" });
+    openPaymentPopup();
   });
 }
 
@@ -688,16 +642,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (navBack) navBack.href = `${BASE_PATH}/`;
   persistVisitContext();
 
-  // Si une offre a été choisie sur le hub (/abonnements), on la pré-sélectionne
-  // dans le popup de paiement du programme choisi ensuite.
-  const preferredPlan = sessionStorage.getItem(PREFERRED_PLAN_KEY);
-  if (preferredPlan && PLANS[preferredPlan]) selectedPlan = preferredPlan;
-
   renderHub();
   renderHubPricingCards();
   renderCountrySelect();
   renderOperatorCards();
-  renderPlanCards();
   renderProgramPage();
   setupSoundToggle("hubHeroVideo", "hubSoundToggle");
   setupSoundToggle("heroVideo", "heroSoundToggle");

@@ -6,13 +6,13 @@
     // Voir programme.html pour l'explication complète de cette correction.
     document.write('<base href="' + (location.pathname.indexOf("/abonnements") === 0 ? "/abonnements/" : "/") + '">');
   </script>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Abonnement MyNina — Télénovelas en illimité dès 5 FCFA | Jour, Semaine, Mois</title>
-  <meta name="description" content="Abonnez-vous à MyNina et regardez vos télénovelas préférées en illimité : Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Paiement Mobile Money (Orange, MTN, Moov, Wave), sans engagement, dès 5 FCFA." />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Abonnement MyNina — Télénovelas en illimité, 7 jours inclus | 3 200 FCFA/mois</title>
+  <meta name="description" content="Abonnez-vous à MyNina et regardez vos télénovelas préférées en illimité : Rosalinda, Marimar, Cœurs brûlants et bien d'autres. 7 premiers jours inclus, 3 200 FCFA/mois, sans engagement. Paiement Mobile Money (Orange, MTN, Moov, Wave)." />
   <meta name="keywords" content="abonnement mynina, télénovela streaming, mynina.tv, mobile money abonnement, rosalinda streaming, marimar streaming, orange money, mtn momo, moov money, wave, telenovela afrique" />
   <link rel="canonical" href="https://mynina.tv/abonnements/" />
-  <meta property="og:title" content="Abonnement MyNina — Télénovelas en illimité dès 5 FCFA" />
-  <meta property="og:description" content="Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Paiement Mobile Money, sans engagement." />
+  <meta property="og:title" content="Abonnement MyNina — Télénovelas en illimité, 7 jours inclus" />
+  <meta property="og:description" content="Rosalinda, Marimar, Cœurs brûlants et bien d'autres. 3 200 FCFA/mois, sans engagement. Paiement Mobile Money." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://mynina.tv/abonnements/" />
   <meta name="robots" content="index, follow" />
@@ -39,7 +39,7 @@
     <button class="sound-toggle" id="hubSoundToggle" aria-label="Activer le son"></button>
     <div class="media-hero-content">
       <h1 class="hub-hero-title reveal">Vos télénovelas préférées, en illimité</h1>
-      <p class="hub-hero-sub reveal reveal-delay-1">Rosalinda, Marimar, Cœurs brûlants et bien d'autres — sur votre mobile, à partir de 5 FCFA, sans engagement.</p>
+      <p class="hub-hero-sub reveal reveal-delay-1">Rosalinda, Marimar, Cœurs brûlants et bien d'autres. 7 premiers jours inclus dès l'inscription, puis 3 200 FCFA/mois. Sans engagement.</p>
       <div class="hero-cta-row reveal reveal-delay-2">
         <button class="btn-primary btn-hero" id="heroSubscribeCta" type="button">S'abonner</button>
         <button class="hero-cta-secondary" id="heroRenewCta" type="button">Déjà abonné ? Se réabonner</button>
@@ -47,10 +47,10 @@
     </div>
   </section>
 
-  <!-- Choix de l'offre -->
+  <!-- Offre -->
   <section class="pricing-section">
-    <h2 class="section-heading reveal">Choisissez votre offre</h2>
-    <p class="pricing-intro reveal reveal-delay-1">Payez uniquement pour le temps dont vous avez besoin. Résiliable à tout moment, sans engagement.</p>
+    <h2 class="section-heading reveal">Un abonnement, tout inclus</h2>
+    <p class="pricing-intro reveal reveal-delay-1">Vos 7 premiers jours sont inclus dès l'inscription. Résiliable à tout moment, sans engagement.</p>
     <div class="pricing-grid reveal reveal-delay-2" id="hubPricingGrid"></div>
   </section>
 
@@ -59,12 +59,12 @@
     <div class="benefit reveal">
       <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 20h8M12 18v2"/></svg></div>
       <h3>Tout le catalogue</h3>
-      <p>Accédez à toutes les télénovelas, sans distinction d'offre.</p>
+      <p>Accédez à toutes les télénovelas en illimité, sans restriction.</p>
     </div>
     <div class="benefit reveal reveal-delay-1">
       <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg></div>
       <h3>Sans engagement</h3>
-      <p>Jour, semaine ou mois : arrêtez quand vous voulez, sans reconduction automatique.</p>
+      <p>Résiliez à tout moment, sans reconduction automatique ni frais cachés.</p>
     </div>
     <div class="benefit reveal reveal-delay-2">
       <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
@@ -79,6 +79,8 @@
     <div class="trust-logos reveal reveal-delay-1">
       <img src="assets/payment-methods/orange-money.png" alt="Orange Money" />
       <img src="assets/payment-methods/mtn-momo.png" alt="MTN MoMo" />
+      <img src="assets/payment-methods/moov-money.png" alt="Moov Money" />
+      <img src="assets/payment-methods/wave.png" alt="Wave" />
     </div>
   </section>
 
@@ -98,8 +100,8 @@
     <h2 class="section-heading reveal">Questions fréquentes</h2>
     <div class="faq-list reveal reveal-delay-1">
       <details class="faq-item">
-        <summary>Puis-je changer d'offre en cours de route ?</summary>
-        <p>Oui. Une fois votre offre actuelle terminée, choisissez celle qui vous convient pour la suite.</p>
+        <summary>Comment fonctionnent les 7 premiers jours ?</summary>
+        <p>Votre abonnement mensuel démarre dès l'inscription et couvre déjà vos 7 premiers jours — ils sont inclus dans le mois payé, sans frais supplémentaire.</p>
       </details>
       <details class="faq-item">
         <summary>Comment se passe le paiement ?</summary>
@@ -107,10 +109,10 @@
       </details>
       <details class="faq-item">
         <summary>Y a-t-il un engagement ?</summary>
-        <p>Aucun. Chaque offre est valable pour sa durée exacte — jour, semaine ou mois — sans renouvellement automatique.</p>
+        <p>Aucun. Votre abonnement est mensuel et non reconduit automatiquement — vous revenez simplement quand vous le souhaitez.</p>
       </details>
       <details class="faq-item">
-        <summary>Que se passe-t-il à la fin de mon offre ?</summary>
+        <summary>Que se passe-t-il à la fin du mois ?</summary>
         <p>Votre accès s'arrête simplement. Revenez quand vous voulez pour reprendre un abonnement.</p>
       </details>
     </div>
@@ -123,14 +125,10 @@
     <div class="payment-card">
       <div class="step-form active" id="stepForm">
         <div class="modal-eyebrow">MyNina</div>
-        <h3 id="modalTitle">Profitez de l'offre</h3>
-        <p class="modal-sub">Renseignez vos informations pour activer votre abonnement.</p>
+        <h3 id="modalTitle">S'abonner à MyNina</h3>
+        <p class="modal-sub">3 200 FCFA/mois, 7 premiers jours inclus. Renseignez vos informations pour activer votre abonnement.</p>
 
         <form id="accountForm" novalidate>
-          <div class="field">
-            <label>Choisissez votre offre*</label>
-            <div class="plan-cards" id="planGroup"></div>
-          </div>
           <div class="field">
             <label for="fullName">Nom complet*</label>
             <input id="fullName" name="fullName" type="text" placeholder="Nom complet" required autocomplete="name" />
@@ -172,5 +170,8 @@
   </section>
 
   <script src="app.js"></script>
+  <script>
+    document.getElementById("submitBtn").textContent = `S'abonner — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}/mois`;
+  </script>
 </body>
 </html>
