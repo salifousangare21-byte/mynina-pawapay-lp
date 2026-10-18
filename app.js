@@ -65,7 +65,8 @@ const COUNTRIES = {
       { code: "ORANGE_CIV", label: "Orange Money", color: "#FF7900" },
       { code: "MTN_MOMO_CIV", label: "MTN Money", color: "#FFCC00" },
       { code: "MOOV_CIV", label: "Moov Money", color: "#0072CE" },
-      { code: "WAVE_CIV", label: "Wave", color: "#1DC8CD" },
+      // Wave masqué temporairement (activation en cours chez PawaPay) — retirer les // pour le réactiver
+      // { code: "WAVE_CIV", label: "Wave", color: "#1DC8CD" },
     ] },
   SEN: { name: "Sénégal", flag: "🇸🇳", dial: "221", currency: "XOF",
     operators: [
@@ -676,3 +677,19 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("hubPricingGrid")?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 });
+
+/* ==========================================================================
+   Chat d'aide (Tawk.to) — même compte que la page d'accueil mynina.tv
+   La bulle de chat est visible dès l'arrivée sur la page.
+   ========================================================================== */
+(function () {
+  window.Tawk_API = window.Tawk_API || {};
+  window.Tawk_LoadStart = new Date();
+  var s1 = document.createElement("script");
+  var s0 = document.getElementsByTagName("script")[0];
+  s1.async = true;
+  s1.src = "https://embed.tawk.to/68762b98b00c4c190e1ca14f/1j06pkjdv";
+  s1.charset = "UTF-8";
+  s1.setAttribute("crossorigin", "*");
+  s0.parentNode.insertBefore(s1, s0);
+})();
