@@ -17,7 +17,9 @@ const POLL_MAX_ATTEMPTS = 30; // ~90s d'attente avant timeout affiché à l'util
 // l'inscription ; les "7 premiers jours" sont un argument commercial qui
 // souligne que ces jours sont déjà inclus dans le mois payé, pas un délai de
 // gratuité suivi d'un prélèvement automatique (techniquement impossible ici).
-const PLAN = { label: "Mensuel", price: 3200, suffix: "/ mois", trialDays: 7 };
+// ⚠️ MODE TEST : prix à 10 FCFA pour tester les parcours (nouveaux comptes vs comptes existants).
+// À REMETTRE À 3200 AVANT LE LANCEMENT PUBLIC.
+const PLAN = { label: "Mensuel", price: 10, suffix: "/ mois", trialDays: 7 };
 const PAYMENT_CURRENCY = "XOF";
 const PAYMENT_CURRENCY_LABEL = "FCFA";
 const SHARED_TRAILER = "assets/videos/trailer.mp4";
