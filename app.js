@@ -17,9 +17,7 @@ const POLL_MAX_ATTEMPTS = 30; // ~90s d'attente avant timeout affiché à l'util
 // l'inscription ; les "7 premiers jours" sont un argument commercial qui
 // souligne que ces jours sont déjà inclus dans le mois payé, pas un délai de
 // gratuité suivi d'un prélèvement automatique (techniquement impossible ici).
-// ⚠️ MODE TEST : prix à 10 FCFA pour tester les événements de suivi (GA4 / GTM / Google Ads).
-// À REMETTRE À 3200 AVANT LE LANCEMENT PUBLIC (et idem pour PLAN_PRICE_XOF dans le Worker, s'il est déployé).
-const PLAN = { label: "Mensuel", price: 10, suffix: "/ mois", trialDays: 7 };
+const PLAN = { label: "Mensuel", price: 3200, suffix: "/ mois", trialDays: 7 };
 const PAYMENT_CURRENCY = "XOF";
 const PAYMENT_CURRENCY_LABEL = "FCFA";
 const SHARED_TRAILER = "assets/videos/trailer.mp4";
