@@ -17,8 +17,8 @@ const POLL_MAX_ATTEMPTS = 30; // ~90s d'attente avant timeout affiché à l'util
 // l'inscription ; les "7 premiers jours" sont un argument commercial qui
 // souligne que ces jours sont déjà inclus dans le mois payé, pas un délai de
 // gratuité suivi d'un prélèvement automatique (techniquement impossible ici).
-// ⚠️ MODE TEST : prix à 10 FCFA pour tester les parcours (nouveaux comptes vs comptes existants).
-// À REMETTRE À 3200 AVANT LE LANCEMENT PUBLIC.
+// ⚠️ MODE TEST : prix à 10 FCFA pour tester les événements de suivi (GA4 / GTM / Google Ads).
+// À REMETTRE À 3200 AVANT LE LANCEMENT PUBLIC (et idem pour PLAN_PRICE_XOF dans le Worker, s'il est déployé).
 const PLAN = { label: "Mensuel", price: 10, suffix: "/ mois", trialDays: 7 };
 const PAYMENT_CURRENCY = "XOF";
 const PAYMENT_CURRENCY_LABEL = "FCFA";
@@ -514,7 +514,7 @@ if (form) {
       return;
     }
 
-    track("payment_pending", { program: currentSlug, depositId: initData.depositId });
+    track("payment_pending", { program: currentSlug, depositId: initData.depositId, transaction_id: initData.depositId, value: currentPrice(), currency: "XOF" });
     showPendingState(displayPhone);
     pollPaymentStatus(initData.depositId, displayPhone, isDebug);
   });
@@ -596,7 +596,7 @@ async function pollPaymentStatus(depositId, displayPhone, isDebug) {
       if (isDebug) formNote.textContent = `[debug] poll ${attempts} — ${data.status}`;
 
       if (data.status === "COMPLETED") {
-        track("payment_completed", { program: currentSlug, depositId });
+        track("payment_completed", { program: currentSlug, depositId, transaction_id: depositId, value: currentPrice(), currency: "XOF" });
         showSuccessState();
         return;
       }
