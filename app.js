@@ -9,22 +9,41 @@ const PAYMENT_STATUS_URL = `${WORKER_BASE_URL}/api/payment-status`;
 const POLL_INTERVAL_MS = 3000;
 const POLL_MAX_ATTEMPTS = 30; // ~90s d'attente avant timeout affiché à l'utilisateur
 
-// Offre unique — remplace l'ancien système à 3 paliers (Jour/Semaine/Mois).
-// Le prix réel facturé (3 200 FCFA) correspond à l'équivalent de 4,90€ déjà
-// utilisé comme référence commerciale ailleurs (site principal mynina.tv).
-// Important : PawaPay ne gère aucun prélèvement récurrent — il n'y a donc pas
-// de "vrai" essai gratuit sans paiement. Le client règle le mois complet dès
-// l'inscription ; les "7 premiers jours" sont un argument commercial qui
-// souligne que ces jours sont déjà inclus dans le mois payé, pas un délai de
-// gratuité suivi d'un prélèvement automatique (techniquement impossible ici).
-const PLAN = { label: "Mensuel", price: 3200, suffix: "/ mois", trialDays: 7 };
+// Trois formules (Jour / Semaine / Mois) avec tarif de lancement et ancien prix barré.
+// ⚠️ OFFER_END doit être IDENTIQUE à OFFER_END dans worker.js : c'est le Worker qui fait foi
+// pour le montant réellement débité. Passé cette date, la page et le Worker repassent
+// automatiquement aux prix normaux (regularPrice).
+// Important : PawaPay ne gère aucun prélèvement récurrent — chaque formule est payée une fois,
+// sans reconduction automatique. Les "7 premiers jours" de la formule mensuelle sont inclus dans
+// le mois payé (ce n'est pas un essai gratuit).
+const OFFER_END = "2026-11-04T23:59:00Z"; // fin de l'offre de lancement (7 jours) — heure UTC = heure d'Abidjan
+const PLANS = {
+  jour:    { key: "jour",    label: "Jour",    title: "Pass Jour",           price: 150,  regularPrice: 300,  suffix: "/ jour",    duration: "1 jour d'accès" },
+  semaine: { key: "semaine", label: "Semaine", title: "Pass Semaine",        price: 750,  regularPrice: 1000, suffix: "/ semaine", duration: "7 jours d'accès" },
+  // label "Mensuel" conservé : c'est la valeur déjà utilisée par le parcours Make en production.
+  mensuel: { key: "mensuel", label: "Mensuel", title: "Abonnement Mensuel",  price: 2000, regularPrice: 3200, suffix: "/ mois",    duration: "1 mois d'accès", trialDays: 7, highlighted: true },
+};
+const PLAN_ORDER = ["jour", "semaine", "mensuel"];
 const PAYMENT_CURRENCY = "XOF";
 const PAYMENT_CURRENCY_LABEL = "FCFA";
 const SHARED_TRAILER = "assets/videos/trailer.mp4";
 
-function currentPlan() { return PLAN; }
-function currentPrice() { return PLAN.price; }
-function currentPlanLabel() { return PLAN.label; }
+let selectedPlanKey = "mensuel";
+function offerActive() { return Date.now() < Date.parse(OFFER_END); }
+function planPrice(plan) { return offerActive() ? plan.price : plan.regularPrice; }
+function currentPlan() { return PLANS[selectedPlanKey]; }
+function currentPrice() { return planPrice(currentPlan()); }
+function currentPlanLabel() { return currentPlan().label; }
+function fmtPrice(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0"); }
+function discountPct(plan) { return Math.round((1 - plan.price / plan.regularPrice) * 100); }
+function submitLabel() { return `S'abonner — ${fmtPrice(currentPrice())} ${PAYMENT_CURRENCY_LABEL} ${currentPlan().suffix}`; }
+function offerEndLabel() {
+  const d = new Date(OFFER_END);
+  const day = d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Abidjan" });
+  const [hh, mm] = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Africa/Abidjan" }).split(":");
+  return `${day} à ${parseInt(hh, 10)} h${mm === "00" ? "" : " " + mm}`;
+}
+
 
 const PROGRAMS = {
   "rosalinda": {
@@ -267,12 +286,7 @@ function renderProgramPage() {
   const synopsisEl = document.getElementById("synopsisText");
   if (synopsisEl) synopsisEl.textContent = currentProgram.synopsis;
 
-  const priceEl = document.getElementById("heroPrice");
-  if (priceEl) priceEl.textContent = `${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
-  const priceSuffixEl = document.getElementById("heroPriceSuffix");
-  if (priceSuffixEl) priceSuffixEl.textContent = currentPlan().suffix;
-  const priceAmountEl = document.getElementById("priceAmount");
-  if (priceAmountEl) priceAmountEl.textContent = `${currentPrice()} ${PAYMENT_CURRENCY_LABEL}`;
+  renderPriceDisplays();
 
   const otherSlugs = Object.keys(PROGRAMS).filter((s) => s !== currentSlug);
   renderCarousel("otherProgramsRow", "otherProgramsCarousel", otherSlugs);
@@ -488,11 +502,23 @@ if (form) {
     } catch (err) {
       console.error("[initiate-payment] erreur:", err);
       submitBtn.disabled = false;
-      submitBtn.textContent = `S'abonner — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}/mois`;
+      submitBtn.textContent = submitLabel();
       formNote.style.color = "var(--danger)";
       formNote.textContent = isDebug
         ? `[debug] erreur réseau — ${err.message}`
         : "Impossible de contacter le service de paiement. Réessayez dans un instant.";
+      return;
+    }
+
+    // Le Worker fait foi sur le prix : si l'offre a pris fin entre l'affichage et l'envoi,
+    // aucun débit n'a eu lieu — on met la page à jour et on invite à revalider.
+    if (initData.status === "PRICE_CHANGED") {
+      track("price_changed", { program: currentSlug, plan: currentPlan().key });
+      renderAllPrices();
+      submitBtn.disabled = false;
+      submitBtn.textContent = submitLabel();
+      formNote.style.color = "var(--danger)";
+      formNote.textContent = "Les tarifs viennent d'être mis à jour. Vérifiez le montant affiché puis validez à nouveau.";
       return;
     }
 
@@ -512,7 +538,7 @@ if (form) {
       return;
     }
 
-    track("payment_pending", { program: currentSlug, depositId: initData.depositId, transaction_id: initData.depositId, value: currentPrice(), currency: "XOF" });
+    track("payment_pending", { program: currentSlug, depositId: initData.depositId, transaction_id: initData.depositId, value: currentPrice(), currency: "XOF", plan: currentPlan().key });
     showPendingState(displayPhone);
     pollPaymentStatus(initData.depositId, displayPhone, isDebug);
   });
@@ -525,7 +551,7 @@ function showPendingState(displayPhone) {
   stepStatus.innerHTML = `
     <svg class="status-spinner" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20"></circle></svg>
     <h4>Vérifiez votre téléphone</h4>
-    <p>Vous avez reçu une demande de confirmation au <strong>${displayPhone}</strong> pour valider votre paiement de ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}. Entrez votre code PIN Mobile Money pour continuer — cette page se met à jour automatiquement.</p>
+    <p>Vous avez reçu une demande de confirmation au <strong>${displayPhone}</strong> pour valider votre paiement de ${fmtPrice(currentPrice())} ${PAYMENT_CURRENCY_LABEL}. Entrez votre code PIN Mobile Money pour continuer — cette page se met à jour automatiquement.</p>
   `;
 }
 
@@ -569,7 +595,7 @@ function showFailedState(reason) {
     stepStatus.classList.remove("active", "show", "is-failed");
     stepForm.classList.add("active");
     submitBtn.disabled = false;
-    submitBtn.textContent = `S'abonner — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}/mois`;
+    submitBtn.textContent = submitLabel();
   });
 }
 
@@ -594,7 +620,7 @@ async function pollPaymentStatus(depositId, displayPhone, isDebug) {
       if (isDebug) formNote.textContent = `[debug] poll ${attempts} — ${data.status}`;
 
       if (data.status === "COMPLETED") {
-        track("payment_completed", { program: currentSlug, depositId, transaction_id: depositId, value: currentPrice(), currency: "XOF" });
+        track("payment_completed", { program: currentSlug, depositId, transaction_id: depositId, value: currentPrice(), currency: "XOF", plan: currentPlan().key });
         showSuccessState();
         return;
       }
@@ -618,32 +644,195 @@ async function pollPaymentStatus(depositId, displayPhone, isDebug) {
 }
 
 /* ==========================================================================
-   Page hub — présentation de l'offre unique
+   Offres — cartes, sélecteur de formule, bandeau et compte à rebours
    ========================================================================== */
+const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>';
+
+function pricingCardHtml(plan) {
+  const active = offerActive();
+  const tag = plan.trialDays
+    ? `Meilleure offre · ${plan.trialDays} jours inclus`
+    : plan.duration;
+  const features = [
+    plan.trialDays ? `Vos ${plan.trialDays} premiers jours inclus dès l'inscription` : plan.duration,
+    "Accès illimité à tout le catalogue",
+    "Sans engagement, sans reconduction automatique",
+    "Paiement 100% Mobile Money",
+  ];
+  return `
+    <div class="pricing-card${plan.highlighted ? " is-highlighted" : ""}" data-plan="${plan.key}">
+      ${active ? `<div class="pricing-promo">−${discountPct(plan)} %</div>` : ""}
+      <div class="pricing-tag">${tag}</div>
+      <div class="pricing-name">${plan.title}</div>
+      ${active ? `<div class="pricing-old"><s>${fmtPrice(plan.regularPrice)} ${PAYMENT_CURRENCY_LABEL}</s></div>` : ""}
+      <div class="pricing-price">${fmtPrice(planPrice(plan))} <span>${PAYMENT_CURRENCY_LABEL}</span></div>
+      <div class="pricing-suffix">${plan.suffix}${plan.key === "mensuel" ? ", sans engagement" : ""}</div>
+      ${active ? `<div class="pricing-deadline">Offre valable 7 jours · se termine dans <b data-offer-countdown>--:--:--</b></div>` : ""}
+      <ul class="pricing-features">
+        ${features.map((f) => `<li>${CHECK_ICON}${f}</li>`).join("")}
+      </ul>
+      <button class="btn-primary pricing-cta" type="button" data-plan="${plan.key}" style="width:100%;">Choisir ${plan.label === "Mensuel" ? "le mois" : "le " + plan.label.toLowerCase()}</button>
+    </div>`;
+}
+
 function renderHubPricingCards() {
   const grid = document.getElementById("hubPricingGrid");
   if (!grid) return;
-
-  grid.innerHTML = `
-    <div class="pricing-card is-highlighted">
-      <div class="pricing-tag">${PLAN.trialDays} jours inclus</div>
-      <div class="pricing-name">Abonnement ${PLAN.label}</div>
-      <div class="pricing-price">${PLAN.price} <span>${PAYMENT_CURRENCY_LABEL}</span></div>
-      <div class="pricing-suffix">${PLAN.suffix}, sans engagement</div>
-      <ul class="pricing-features">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Vos ${PLAN.trialDays} premiers jours inclus dès l'inscription</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Accès illimité à tout le catalogue</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Résiliable à tout moment, sans engagement</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Paiement 100% Mobile Money</li>
-      </ul>
-      <button class="btn-primary pricing-cta" type="button" style="width:100%;">S'abonner</button>
-    </div>
-  `;
-
-  grid.querySelector(".pricing-cta")?.addEventListener("click", () => {
-    track("plan_selected_hub", { plan: "mensuel" });
-    openPaymentPopup();
+  grid.classList.add("pricing-grid-3");
+  grid.innerHTML = PLAN_ORDER.map((k) => pricingCardHtml(PLANS[k])).join("");
+  grid.querySelectorAll(".pricing-cta").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.plan;
+      track("plan_selected_hub", { plan: key, offer_active: offerActive() });
+      selectPlan(key);
+      openPaymentPopup();
+    });
   });
+}
+
+function planChipsHtml() {
+  const active = offerActive();
+  return PLAN_ORDER.map((k) => {
+    const p = PLANS[k];
+    return `<button type="button" class="plan-chip${k === selectedPlanKey ? " is-selected" : ""}" data-plan="${k}" aria-pressed="${k === selectedPlanKey}">
+      <span class="plan-chip-name">${p.label === "Mensuel" ? "Mois" : p.label}</span>
+      ${active ? `<s class="plan-chip-old">${fmtPrice(p.regularPrice)}</s>` : ""}
+      <strong class="plan-chip-price">${fmtPrice(planPrice(p))} ${PAYMENT_CURRENCY_LABEL}</strong>
+    </button>`;
+  }).join("");
+}
+
+function ensurePlanSelector() {
+  if (document.getElementById("planChips")) return;
+  const priceRow = document.querySelector("#accountForm .price-row");
+  if (!priceRow) return;
+  const field = document.createElement("div");
+  field.className = "field";
+  field.innerHTML = '<label>Formule*</label><div class="plan-chips" id="planChips"></div>';
+  priceRow.parentNode.insertBefore(field, priceRow);
+  field.querySelector("#planChips").addEventListener("click", (e) => {
+    const btn = e.target.closest(".plan-chip");
+    if (!btn) return;
+    track("plan_changed_form", { plan: btn.dataset.plan, offer_active: offerActive() });
+    selectPlan(btn.dataset.plan);
+  });
+  // Note sous le montant : durée de l'offre
+  if (!document.getElementById("offerFormNote")) {
+    const note = document.createElement("div");
+    note.id = "offerFormNote";
+    note.className = "offer-form-note";
+    priceRow.parentNode.insertBefore(note, priceRow.nextSibling);
+  }
+}
+
+function selectPlan(key) {
+  if (!PLANS[key]) return;
+  selectedPlanKey = key;
+  renderPriceDisplays();
+}
+
+// Met à jour tous les affichages de prix de la page (hero, formulaire, bouton, textes)
+function renderPriceDisplays() {
+  const plan = currentPlan();
+  const price = currentPrice();
+  const active = offerActive();
+
+  const priceEl = document.getElementById("heroPrice");
+  if (priceEl) priceEl.innerHTML = `${active ? `<s class="old-price">${fmtPrice(plan.regularPrice)}</s> ` : ""}${fmtPrice(price)} ${PAYMENT_CURRENCY_LABEL}`;
+  const priceSuffixEl = document.getElementById("heroPriceSuffix");
+  if (priceSuffixEl) priceSuffixEl.textContent = plan.suffix;
+
+  const amountEl = document.getElementById("priceAmount");
+  if (amountEl) amountEl.innerHTML = `${active ? `<s class="old-price">${fmtPrice(plan.regularPrice)}</s> ` : ""}${fmtPrice(price)} ${PAYMENT_CURRENCY_LABEL}`;
+
+  const modalSub = document.querySelector("#stepForm .modal-sub");
+  if (modalSub) {
+    modalSub.textContent = `${plan.title} : ${fmtPrice(price)} ${PAYMENT_CURRENCY_LABEL} ${plan.suffix}` +
+      (plan.trialDays ? `, ${plan.trialDays} premiers jours inclus` : "") +
+      `. Renseignez vos informations pour activer votre abonnement.`;
+  }
+
+  const chips = document.getElementById("planChips");
+  if (chips) chips.innerHTML = planChipsHtml();
+
+  const formNote = document.getElementById("offerFormNote");
+  if (formNote) {
+    formNote.innerHTML = active
+      ? `Tarif de lancement valable jusqu'au <b>${offerEndLabel()}</b> (heure d'Abidjan) — fin dans <b data-offer-countdown>--:--:--</b>.`
+      : "";
+    formNote.hidden = !active;
+  }
+
+  const hubSub = document.querySelector(".hub-hero-sub");
+  if (hubSub) {
+    hubSub.textContent = active
+      ? "Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Offre de lancement : jusqu'à −50 %, valable 7 jours seulement. Sans engagement."
+      : "Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Dès 300 FCFA, sans engagement.";
+  }
+  const pricingHeading = document.querySelector(".pricing-section .section-heading");
+  if (pricingHeading) pricingHeading.textContent = "Choisissez votre formule";
+  const pricingIntro = document.querySelector(".pricing-section .pricing-intro");
+  if (pricingIntro) pricingIntro.textContent = "Jour, semaine ou mois : accès illimité à tout le catalogue. Sans engagement, sans reconduction automatique.";
+
+  if (typeof submitBtn !== "undefined" && submitBtn && !submitBtn.disabled) submitBtn.textContent = submitLabel();
+  renderOfferPills();
+  tickOffer();
+}
+
+// Pastille « offre 7 jours » en haut du hero et bandeau au-dessus des tarifs
+function renderOfferPills() {
+  const active = offerActive();
+  const heroContent = document.querySelector(".media-hero-content");
+  let pill = document.getElementById("offerPill");
+  if (heroContent && !pill && active) {
+    pill = document.createElement("div");
+    pill.id = "offerPill";
+    pill.className = "offer-pill";
+    heroContent.insertBefore(pill, heroContent.firstChild);
+  }
+  if (pill) {
+    pill.hidden = !active;
+    pill.innerHTML = active ? `Offre de lancement · 7 jours · fin dans <b data-offer-countdown>--:--:--</b>` : "";
+  }
+
+  const grid = document.getElementById("hubPricingGrid");
+  let banner = document.getElementById("offerBanner");
+  if (grid && !banner && active) {
+    banner = document.createElement("div");
+    banner.id = "offerBanner";
+    banner.className = "offer-banner";
+    grid.parentNode.insertBefore(banner, grid);
+  }
+  if (banner) {
+    banner.hidden = !active;
+    banner.innerHTML = active
+      ? `<strong>Offre de lancement jusqu'à −50 % · valable 7 jours</strong><span>Jusqu'au ${offerEndLabel()} (heure d'Abidjan) · fin dans <b data-offer-countdown>--:--:--</b></span>`
+      : "";
+  }
+}
+
+function formatRemaining(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const pad = (n) => String(n).padStart(2, "0");
+  const days = Math.floor(s / 86400);
+  const rest = s % 86400;
+  return `${days > 0 ? days + " j " : ""}${pad(Math.floor(rest / 3600))}:${pad(Math.floor((rest % 3600) / 60))}:${pad(rest % 60)}`;
+}
+
+let offerWasActive = offerActive();
+function tickOffer() {
+  const text = formatRemaining(Date.parse(OFFER_END) - Date.now());
+  document.querySelectorAll("[data-offer-countdown]").forEach((el) => { el.textContent = text; });
+  const active = offerActive();
+  if (active !== offerWasActive) {
+    offerWasActive = active;
+    renderAllPrices(); // l'offre vient de se terminer : retour aux prix normaux
+  }
+}
+
+function renderAllPrices() {
+  renderHubPricingCards();
+  renderPriceDisplays();
 }
 
 
@@ -656,7 +845,10 @@ document.addEventListener("DOMContentLoaded", () => {
   persistVisitContext();
 
   renderHub();
+  ensurePlanSelector();
   renderHubPricingCards();
+  renderPriceDisplays();
+  setInterval(tickOffer, 1000);
   renderCountrySelect();
   renderOperatorCards();
   renderProgramPage();

@@ -1,0 +1,125 @@
+/* ==========================================================================
+   MyNina — Offre de lancement 7 jours : prix barrés, formules, compte à rebours
+   S'appuie sur les variables de style.css quand elles existent, avec valeurs de secours.
+   ========================================================================== */
+:root {
+  --offer-accent: var(--accent, var(--primary, #e50914));
+  --offer-text: var(--text, #fff);
+  --offer-muted: var(--text-muted, rgba(255, 255, 255, .62));
+  --offer-bg: var(--card-bg, rgba(255, 255, 255, .06));
+  --offer-border: var(--border, rgba(255, 255, 255, .16));
+}
+
+/* Prix barré */
+s.old-price, .pricing-old s, .plan-chip-old {
+  color: var(--offer-muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--offer-accent);
+  font-weight: 500;
+}
+
+/* Pastille dans le hero */
+.offer-pill {
+  display: inline-block;
+  margin: 0 0 14px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--offer-accent);
+  color: #fff;
+  font-size: .85rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.offer-pill b, .offer-banner b, .pricing-deadline b, .offer-form-note b {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bandeau au-dessus des tarifs */
+.offer-banner {
+  max-width: 880px;
+  margin: 0 auto 22px;
+  padding: 14px 18px;
+  border: 1px solid var(--offer-accent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--offer-accent) 14%, transparent);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.offer-banner strong { font-size: 1.05rem; }
+.offer-banner span { font-size: .9rem; color: var(--offer-muted); }
+.offer-banner[hidden], .offer-pill[hidden], .offer-form-note[hidden] { display: none; }
+
+/* Trois cartes de tarifs */
+.pricing-grid.pricing-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+  max-width: 1040px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.pricing-grid-3 .pricing-card { position: relative; display: flex; flex-direction: column; }
+.pricing-grid-3 .pricing-features { flex: 1; }
+.pricing-promo {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--offer-accent);
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 800;
+}
+.pricing-old { margin-top: 2px; font-size: 1.05rem; }
+.pricing-deadline {
+  margin: 8px 0 4px;
+  font-size: .82rem;
+  color: var(--offer-muted);
+}
+.pricing-deadline b { color: var(--offer-text); }
+
+@media (max-width: 820px) {
+  .pricing-grid.pricing-grid-3 { grid-template-columns: 1fr; max-width: 420px; }
+  /* le mois (offre mise en avant) passe en premier sur mobile */
+  .pricing-grid-3 .pricing-card[data-plan="mensuel"] { order: -1; }
+}
+
+/* Sélecteur de formule dans le formulaire */
+.plan-chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.plan-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border: 1.5px solid var(--offer-border);
+  border-radius: 12px;
+  background: var(--offer-bg);
+  color: var(--offer-text);
+  font: inherit;
+  cursor: pointer;
+}
+.plan-chip.is-selected {
+  border-color: var(--offer-accent);
+  background: color-mix(in srgb, var(--offer-accent) 16%, transparent);
+}
+.plan-chip-name { font-size: .85rem; font-weight: 700; }
+.plan-chip-old { font-size: .78rem; }
+.plan-chip-price { font-size: .92rem; }
+
+.price-row .amount { text-align: right; }
+.offer-form-note {
+  margin: -6px 0 14px;
+  font-size: .82rem;
+  color: var(--offer-muted);
+  text-align: center;
+}

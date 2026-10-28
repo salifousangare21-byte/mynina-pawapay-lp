@@ -11,12 +11,12 @@
     document.write('<base href="' + (location.pathname.indexOf("/abonnements") === 0 ? "/abonnements/" : "/") + '">');
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Abonnement MyNina — Télénovelas en illimité, 7 jours inclus | 3 200 FCFA/mois</title>
-  <meta name="description" content="Abonnez-vous à MyNina et regardez vos télénovelas préférées en illimité : Rosalinda, Marimar, Cœurs brûlants et bien d'autres. 7 premiers jours inclus, 3 200 FCFA/mois, sans engagement. Paiement Mobile Money (Orange, MTN, Moov)." />
+  <title>Abonnement MyNina — Télénovelas en illimité, sans engagement | Mobile Money</title>
+  <meta name="description" content="Abonnez-vous à MyNina et regardez vos télénovelas préférées en illimité : Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Formules jour, semaine ou mois, sans engagement. Offre de lancement limitée. Paiement Mobile Money (Orange, MTN, Moov)." />
   <meta name="keywords" content="abonnement mynina, télénovela streaming, mynina.tv, mobile money abonnement, rosalinda streaming, marimar streaming, orange money, mtn momo, moov money, telenovela afrique" />
   <link rel="canonical" href="https://mynina.tv/abonnements/" />
-  <meta property="og:title" content="Abonnement MyNina — Télénovelas en illimité, 7 jours inclus" />
-  <meta property="og:description" content="Rosalinda, Marimar, Cœurs brûlants et bien d'autres. 3 200 FCFA/mois, sans engagement. Paiement Mobile Money." />
+  <meta property="og:title" content="Abonnement MyNina — Télénovelas en illimité, offre de lancement 7 jours" />
+  <meta property="og:description" content="Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Jour, semaine ou mois, sans engagement. Paiement Mobile Money." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://mynina.tv/abonnements/" />
   <meta name="robots" content="index, follow" />
@@ -27,6 +27,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="offer.css" />
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->
@@ -46,7 +47,7 @@
     <button class="sound-toggle" id="hubSoundToggle" aria-label="Activer le son"></button>
     <div class="media-hero-content">
       <h1 class="hub-hero-title reveal">Vos télénovelas préférées, en illimité</h1>
-      <p class="hub-hero-sub reveal reveal-delay-1">Rosalinda, Marimar, Cœurs brûlants et bien d'autres. 7 premiers jours inclus dès l'inscription, puis 3 200 FCFA/mois. Sans engagement.</p>
+      <p class="hub-hero-sub reveal reveal-delay-1">Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Offre de lancement : jusqu'à −50 %, valable 7 jours seulement. Sans engagement.</p>
       <div class="hero-cta-row reveal reveal-delay-2">
         <button class="btn-primary btn-hero" id="heroSubscribeCta" type="button">S'abonner</button>
         <button class="hero-cta-secondary" id="heroRenewCta" type="button">Déjà abonné ? Se réabonner</button>
@@ -56,8 +57,8 @@
 
   <!-- Offre -->
   <section class="pricing-section">
-    <h2 class="section-heading reveal">Un abonnement, tout inclus</h2>
-    <p class="pricing-intro reveal reveal-delay-1">Vos 7 premiers jours sont inclus dès l'inscription. Résiliable à tout moment, sans engagement.</p>
+    <h2 class="section-heading reveal">Choisissez votre formule</h2>
+    <p class="pricing-intro reveal reveal-delay-1">Jour, semaine ou mois : accès illimité à tout le catalogue. Sans engagement, sans reconduction automatique.</p>
     <div class="pricing-grid reveal reveal-delay-2" id="hubPricingGrid"></div>
   </section>
 
@@ -109,8 +110,8 @@
     <h2 class="section-heading reveal">Questions fréquentes</h2>
     <div class="faq-list reveal reveal-delay-1">
       <details class="faq-item">
-        <summary>Comment fonctionnent les 7 premiers jours ?</summary>
-        <p>Votre abonnement mensuel démarre dès l'inscription et couvre déjà vos 7 premiers jours — ils sont inclus dans le mois payé, sans frais supplémentaire.</p>
+        <summary>Comment fonctionne l'offre de lancement de 7 jours ?</summary>
+        <p>Pendant 7 jours, les trois formules sont proposées à prix réduit : le jour à 150 FCFA au lieu de 300, la semaine à 750 FCFA au lieu de 1 000, le mois à 2 000 FCFA au lieu de 3 200. Passé ce délai, les prix normaux s'appliquent. Avec la formule mensuelle, vos 7 premiers jours sont inclus dans le mois payé.</p>
       </details>
       <details class="faq-item">
         <summary>Comment se passe le paiement ?</summary>
@@ -118,10 +119,10 @@
       </details>
       <details class="faq-item">
         <summary>Y a-t-il un engagement ?</summary>
-        <p>Aucun. Votre abonnement est mensuel et non reconduit automatiquement — vous revenez simplement quand vous le souhaitez.</p>
+        <p>Aucun. Chaque formule (jour, semaine ou mois) est payée une seule fois et n'est jamais reconduite automatiquement — vous revenez simplement quand vous le souhaitez.</p>
       </details>
       <details class="faq-item">
-        <summary>Que se passe-t-il à la fin du mois ?</summary>
+        <summary>Que se passe-t-il à la fin de ma formule ?</summary>
         <p>Votre accès s'arrête simplement. Revenez quand vous voulez pour reprendre un abonnement.</p>
       </details>
     </div>
@@ -135,7 +136,7 @@
       <div class="step-form active" id="stepForm">
         <div class="modal-eyebrow">MyNina</div>
         <h3 id="modalTitle">S'abonner à MyNina</h3>
-        <p class="modal-sub">3 200 FCFA/mois, 7 premiers jours inclus. Renseignez vos informations pour activer votre abonnement.</p>
+        <p class="modal-sub">Choisissez votre formule et renseignez vos informations pour activer votre abonnement.</p>
 
         <form id="accountForm" novalidate>
           <div class="field">
@@ -180,7 +181,8 @@
 
   <script src="app.js"></script>
   <script>
-    document.getElementById("submitBtn").textContent = `S'abonner — ${currentPrice()} ${PAYMENT_CURRENCY_LABEL}/mois`;
+    document.getElementById("submitBtn").textContent = submitLabel();
   </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"2b485b1dfaad41bba8f346fb72611021","r":1,"spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
