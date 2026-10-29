@@ -123,3 +123,57 @@ s.old-price, .pricing-old s, .plan-chip-old {
   color: var(--offer-muted);
   text-align: center;
 }
+
+/* ==========================================================================
+   Paiement guidé — encart explicatif, attente, échecs, aide
+   ========================================================================== */
+.phone-hint { display: block; min-height: 1.2em; }
+.phone-hint.is-ok { color: var(--success, #2e9d5b); }
+.phone-hint.is-warn { color: var(--danger, #e5484d); font-weight: 600; }
+#emailHint:empty { display: none; }
+.link-btn { background: none; border: 0; padding: 0; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+
+.pay-guide { margin: 14px 0; padding: 12px 14px; border-radius: 10px; background: rgba(127,127,127,.12); border: 1px solid rgba(127,127,127,.28); font-size: .9rem; line-height: 1.45; }
+.pay-guide-title { font-weight: 700; margin-bottom: 6px; }
+.pay-guide ol { margin: 0 0 8px 1.2em; padding: 0; }
+.pay-guide li { margin: 2px 0; }
+.pay-guide-note { margin: 0; opacity: .9; }
+
+.pay-steps-list { text-align: left; margin: 12px auto; padding-left: 1.3em; max-width: 340px; line-height: 1.5; }
+.pay-steps-list li { margin: 4px 0; }
+.pay-progress { height: 4px; border-radius: 4px; background: rgba(127,127,127,.25); overflow: hidden; margin: 14px 0 6px; }
+.pay-progress span { display: block; height: 100%; width: 0; background: currentColor; opacity: .7; transition: width .6s linear; }
+.pay-wait-tip { font-size: .85rem; opacity: .9; margin-top: 10px; }
+
+.btn-secondary-lite { display: block; width: 100%; margin: 0 0 10px; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(127,127,127,.5); background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+.btn-secondary-lite:hover { background: rgba(127,127,127,.15); }
+
+.how-section { padding: 40px 20px 8px; max-width: 760px; margin: 0 auto; }
+.how-steps { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 14px; }
+.how-steps li { display: flex; gap: 14px; align-items: flex-start; text-align: left; }
+.how-num { flex: 0 0 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; background: rgba(127,127,127,.22); }
+.how-steps strong { display: block; margin-bottom: 2px; }
+.how-steps p { margin: 0; opacity: .85; line-height: 1.45; }
+@media (min-width: 720px) { .how-steps { grid-template-columns: repeat(3, 1fr); } .how-steps li { flex-direction: column; } }
+
+/* ==========================================================================
+   Pages par formule (?plan=…) et étape de validation avant paiement
+   ========================================================================== */
+.field[hidden], .plan-summary[hidden], .all-plans-link[hidden], .confirm-mismatch[hidden] { display: none !important; }
+.pricing-grid-1 { display: grid; grid-template-columns: minmax(0, 420px); justify-content: center; gap: 16px; }
+.all-plans-link { display: block; margin: 14px auto 0; font-size: .95rem; opacity: .85; }
+.plan-summary { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; background: rgba(127,127,127,.12); border: 1px solid rgba(127,127,127,.28); font-size: .92rem; }
+
+.confirm-wrap { text-align: left; }
+.confirm-wrap h4 { text-align: center; margin: 0 0 8px; }
+.confirm-lead { margin: 0 0 12px; line-height: 1.45; }
+.confirm-recap { margin: 0 0 12px; padding: 4px 12px; border-radius: 10px; background: rgba(127,127,127,.12); border: 1px solid rgba(127,127,127,.28); }
+.confirm-recap > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(127,127,127,.2); }
+.confirm-recap > div:last-child { border-bottom: 0; }
+.confirm-recap dt { opacity: .75; font-size: .88rem; flex: 0 0 auto; }
+.confirm-recap dd { margin: 0; font-weight: 700; text-align: right; word-break: break-word; }
+.confirm-mismatch { margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--danger, #e5484d); color: var(--danger, #e5484d); font-weight: 600; font-size: .9rem; line-height: 1.4; }
+.confirm-warn { margin: 0 0 12px; font-size: .9rem; line-height: 1.5; }
+.confirm-check { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 14px; padding: 12px; border-radius: 10px; border: 1px solid rgba(127,127,127,.4); cursor: pointer; font-size: .92rem; line-height: 1.45; }
+.confirm-check input { flex: 0 0 22px; width: 22px; height: 22px; margin-top: 1px; }
+.confirm-wrap .btn-primary[disabled] { opacity: .45; cursor: not-allowed; }
