@@ -19,7 +19,7 @@ const FAIL_COUNT_KEY = "mynina_fail_count";
 // Important : PawaPay ne gère aucun prélèvement récurrent — chaque formule est payée une fois,
 // sans reconduction automatique. Les "7 premiers jours" de la formule mensuelle sont inclus dans
 // le mois payé (ce n'est pas un essai gratuit).
-const OFFER_END = "2026-11-15T23:59:00Z"; // fin de l'offre de lancement (dimanche 15 novembre 2026) — heure UTC = heure d'Abidjan
+const OFFER_END = "2026-12-31T23:59:00Z"; // fin de l'offre de lancement (jeudi 31 décembre 2026) — heure UTC = heure d'Abidjan
 const PLANS = {
   jour:    { key: "jour",    label: "Jour",    title: "Pass Jour",           price: 150,  regularPrice: 300,  suffix: "/ jour",    duration: "1 jour d'accès" },
   semaine: { key: "semaine", label: "Semaine", title: "Pass Semaine",        price: 750,  regularPrice: 1000, suffix: "/ semaine", duration: "7 jours d'accès" },
@@ -804,7 +804,7 @@ function showSuccessState() {
   stepStatus.innerHTML = `
     <div class="status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6 9 17l-5-5"/></svg></div>
     <h4>Paiement confirmé</h4>
-    <p>Votre abonnement MyNina est en cours d'activation. Vous recevrez un e-mail et un message WhatsApp de confirmation d'ici quelques instants. Pensez à vérifier vos courriers indésirables.</p>
+    <p>Votre abonnement MyNina est en cours d'activation. Vous recevrez un e-mail de confirmation d'ici quelques instants. Pensez à vérifier vos courriers indésirables.</p>
   `;
 }
 
@@ -1134,7 +1134,7 @@ function renderPriceDisplays() {
   const hubSub = document.querySelector(".hub-hero-sub");
   if (hubSub && !singleMode()) {
     hubSub.textContent = active
-      ? "Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Offre de lancement : jusqu'à −50 %, valable jusqu'au 15 novembre. Sans engagement."
+      ? "Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Offre de lancement : jusqu'à −50 %, valable jusqu'au 31 décembre. Sans engagement."
       : "Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Dès 300 FCFA, sans engagement.";
   }
   const pricingHeading = document.querySelector(".pricing-section .section-heading");
