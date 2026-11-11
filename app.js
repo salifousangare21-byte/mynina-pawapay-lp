@@ -27,8 +27,33 @@ const PLANS = {
   mensuel: { key: "mensuel", label: "Mensuel", title: "Abonnement Mensuel",  price: 2000, regularPrice: 3200, suffix: "/ mois",    duration: "1 mois d'accès", trialDays: 7, highlighted: true },
 };
 const PLAN_ORDER = ["jour", "semaine", "mensuel"];
-const PAYMENT_CURRENCY = "XOF";
-const PAYMENT_CURRENCY_LABEL = "FCFA";
+// Tarifs par monnaie : [prix de lancement, prix normal]. ⚠️ DOIT être IDENTIQUE à PRICE_TABLE dans worker.js
+// (le Worker décide du montant réellement débité). XOF et XAF : parité fixe 1:1.
+// CDF (RDC) : prix de lancement fixés par MyNina (590 / 2 900 / 7 900 FC). Prix normaux déduits au même taux (≈ 3,9 FC pour 1 FCFA).
+const PRICE_TABLE = {
+  XOF: { jour: [150, 300],   semaine: [750, 1000],   mensuel: [2000, 3200] },
+  XAF: { jour: [150, 300],   semaine: [750, 1000],   mensuel: [2000, 3200] },
+  CDF: { jour: [590, 1180],  semaine: [2900, 3900],  mensuel: [7900, 12600] },
+};
+const CURRENCY_LABELS = { XOF: "FCFA", XAF: "FCFA", CDF: "FC" };
+let PAYMENT_CURRENCY = "XOF";
+let PAYMENT_CURRENCY_LABEL = "FCFA";
+// Applique la monnaie du pays choisi : met à jour prix et libellé utilisés partout dans la page.
+function applyCurrency(cur) {
+  if (!PRICE_TABLE[cur]) cur = "XOF";
+  PAYMENT_CURRENCY = cur;
+  PAYMENT_CURRENCY_LABEL = CURRENCY_LABELS[cur];
+  for (const k of Object.keys(PLANS)) {
+    const [promo, regular] = PRICE_TABLE[cur][k];
+    PLANS[k].price = promo;
+    PLANS[k].regularPrice = regular;
+  }
+}
+// Valeur de référence en FCFA (XOF) pour le suivi (GA4, Google Ads, Meta), quelle que soit la monnaie payée.
+function refValue(planKey) {
+  const e = PRICE_TABLE.XOF[planKey];
+  return e ? (Date.now() < Date.parse(OFFER_END) ? e[0] : e[1]) : 0;
+}
 const SHARED_TRAILER = "assets/videos/trailer.mp4";
 
 let selectedPlanKey = "mensuel";
@@ -97,7 +122,7 @@ if (LANDING.plan) selectedPlanKey = LANDING.plan;
 function singleMode() { return !!LANDING.plan && !LANDING.showAll; }
 
 const COUNTRIES = {
-  CIV: { name: "Côte d'Ivoire", flag: "🇨🇮", dial: "225", currency: "XOF",
+  CIV: { name: "Côte d'Ivoire", flag: "🇨🇮", dial: "225", currency: "XOF", example: "0758356184",
     operators: [
       { code: "ORANGE_CIV", label: "Orange Money", color: "#FF7900" },
       { code: "MTN_MOMO_CIV", label: "MTN Money", color: "#FFCC00" },
@@ -105,25 +130,37 @@ const COUNTRIES = {
       // Wave masqué temporairement (activation en cours chez PawaPay) — retirer les // pour le réactiver
       // { code: "WAVE_CIV", label: "Wave", color: "#1DC8CD" },
     ] },
-  SEN: { name: "Sénégal", flag: "🇸🇳", dial: "221", currency: "XOF",
+  SEN: { name: "Sénégal", flag: "🇸🇳", dial: "221", currency: "XOF", lens: [9], dropZero: true, example: "773456789",
     operators: [
       { code: "ORANGE_SEN", label: "Orange Money", color: "#FF7900" },
       { code: "FREE_SEN", label: "Free Money", color: "#7B2FF7" },
     ] },
-  CMR: { name: "Cameroun", flag: "🇨🇲", dial: "237", currency: "XAF",
+  CMR: { name: "Cameroun", flag: "🇨🇲", dial: "237", currency: "XAF", lens: [9], dropZero: true, example: "653456789",
     operators: [
-      { code: "ORANGE_CMR", label: "Orange Money", color: "#FF7900" },
+      // Orange Cameroun : absent des opérateurs actifs du compte PawaPay (vérifié le 11/11/2026) — retirer les // une fois activé.
+      // { code: "ORANGE_CMR", label: "Orange Money", color: "#FF7900" },
       { code: "MTN_MOMO_CMR", label: "MTN Mobile Money", color: "#FFCC00" },
     ] },
-  BEN: { name: "Bénin", flag: "🇧🇯", dial: "229", currency: "XOF",
+  BEN: { name: "Bénin", flag: "🇧🇯", dial: "229", currency: "XOF", lens: [10], addPrefix: { len: 8, prefix: "01" }, example: "0142083499",
     operators: [
       { code: "MTN_MOMO_BEN", label: "MTN Mobile Money", color: "#FFCC00" },
       { code: "MOOV_BEN", label: "Moov Money", color: "#0072CE" },
     ] },
-  BFA: { name: "Burkina Faso", flag: "🇧🇫", dial: "226", currency: "XOF",
+  COD: { name: "RD Congo", flag: "🇨🇩", dial: "243", currency: "CDF", lens: [9], dropZero: true, example: "813456789",
     operators: [
-      { code: "ORANGE_BFA", label: "Orange Money", color: "#FF7900" },
-      { code: "MOOV_BFA", label: "Moov Money", color: "#0072CE" },
+      { code: "VODACOM_MPESA_COD", label: "M-Pesa (Vodacom)", color: "#E60000" },
+      { code: "AIRTEL_COD", label: "Airtel Money", color: "#E40000" },
+      { code: "ORANGE_COD", label: "Orange Money", color: "#FF7900" },
+    ] },
+  COG: { name: "Congo-Brazzaville", flag: "🇨🇬", dial: "242", currency: "XAF", lens: [9], example: "063456789",
+    operators: [
+      { code: "MTN_MOMO_COG", label: "MTN Mobile Money", color: "#FFCC00" },
+      { code: "AIRTEL_COG", label: "Airtel Money", color: "#E40000" },
+    ] },
+  GAB: { name: "Gabon", flag: "🇬🇦", dial: "241", currency: "XAF", lens: [8], dropZero: true, example: "74345678",
+    operators: [
+      { code: "AIRTEL_GAB", label: "Airtel Money", color: "#E40000" },
+      { code: "MOOV_GAB", label: "Moov Money", color: "#0072CE" },
     ] },
 };
 const DEFAULT_COUNTRY = "CIV";
@@ -366,6 +403,47 @@ function closePaymentPopup() {
   stepForm.classList.add("active");
 }
 
+let countryTouched = false;
+// Change de pays : indicatif, opérateurs, monnaie et prix affichés.
+function applyCountry(iso3) {
+  if (!COUNTRIES[iso3]) return;
+  selectedCountry = iso3;
+  const sel = document.getElementById("country");
+  if (sel && sel.value !== iso3) sel.value = iso3;
+  const dialEl = document.getElementById("phoneDial");
+  if (dialEl) dialEl.textContent = `+${COUNTRIES[iso3].dial}`;
+  const ph = document.getElementById("phone");
+  if (ph && COUNTRIES[iso3].example) ph.placeholder = COUNTRIES[iso3].example;
+  renderOperatorCards();
+  const before = PAYMENT_CURRENCY;
+  applyCurrency(COUNTRIES[iso3].currency);
+  if (before !== PAYMENT_CURRENCY) renderAllPrices();
+}
+
+// Détection automatique du pays du visiteur (via le Worker Cloudflare, /api/geo).
+const GEO_URL = `${WORKER_BASE_URL}/api/geo`;
+const ISO2_TO_ISO3 = { CI: "CIV", SN: "SEN", CM: "CMR", BJ: "BEN", CD: "COD", CG: "COG", GA: "GAB" };
+async function detectCountry() {
+  try {
+    let iso2 = null;
+    try { iso2 = sessionStorage.getItem("geo_country"); } catch (e) {}
+    if (!iso2) {
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 2500);
+      const res = await fetch(GEO_URL, { signal: ctl.signal });
+      clearTimeout(timer);
+      const data = await res.json();
+      iso2 = String(data.country || "").toUpperCase();
+      try { sessionStorage.setItem("geo_country", iso2); } catch (e) {}
+    }
+    const iso3 = ISO2_TO_ISO3[iso2];
+    if (iso3 && !countryTouched && !paymentInFlight && iso3 !== selectedCountry && !document.getElementById("phone")?.value) {
+      applyCountry(iso3);
+      track("country_detected", { country: iso3 });
+    }
+  } catch (e) { /* pas de détection : on garde le pays par défaut */ }
+}
+
 function renderCountrySelect() {
   const select = document.getElementById("country");
   if (!select) return;
@@ -374,9 +452,8 @@ function renderCountrySelect() {
     return `<option value="${iso3}" ${iso3 === DEFAULT_COUNTRY ? "selected" : ""}>${c.flag} ${c.name}</option>`;
   }).join("");
   select.addEventListener("change", (e) => {
-    selectedCountry = e.target.value;
-    document.getElementById("phoneDial").textContent = `+${COUNTRIES[selectedCountry].dial}`;
-    renderOperatorCards();
+    countryTouched = true; // le choix du client prime sur la détection automatique
+    applyCountry(e.target.value);
   });
   const dialEl = document.getElementById("phoneDial");
   if (dialEl) dialEl.textContent = `+${COUNTRIES[DEFAULT_COUNTRY].dial}`;
@@ -386,19 +463,24 @@ const OPERATOR_LOGOS = {
   ORANGE_CIV: "assets/payment-methods/orange-money.png",
   ORANGE_SEN: "assets/payment-methods/orange-money.png",
   ORANGE_CMR: "assets/payment-methods/orange-money.png",
-  ORANGE_BFA: "assets/payment-methods/orange-money.png",
+  ORANGE_COD: "assets/payment-methods/orange-money.png",
   MTN_MOMO_CIV: "assets/payment-methods/mtn-momo.png",
   MTN_MOMO_CMR: "assets/payment-methods/mtn-momo.png",
   MTN_MOMO_BEN: "assets/payment-methods/mtn-momo.png",
   MOOV_CIV: "assets/payment-methods/moov-money.png",
   MOOV_BEN: "assets/payment-methods/moov-money.png",
-  MOOV_BFA: "assets/payment-methods/moov-money.png",
+  MOOV_GAB: "assets/payment-methods/moov-money.png",
+  MTN_MOMO_COG: "assets/payment-methods/mtn-momo.png",
   WAVE_CIV: "assets/payment-methods/wave.png",
+  FREE_SEN: "assets/payment-methods/free-money.png",
+  AIRTEL_COD: "assets/payment-methods/airtel-money.png",
+  VODACOM_MPESA_COD: "assets/payment-methods/vodacom.png",
+  AIRTEL_COG: "assets/payment-methods/airtel-money.png",
+  AIRTEL_GAB: "assets/payment-methods/airtel-money.png",
   // ⚠️ Wave Sénégal reste en attente (statut juridique de l'entité non confirmé
   // côté PawaPay) — non réintégré tant que non confirmé actif.
   // ⚠️ Le fichier wave.png actuel est un visuel provisoire, pas le vrai logo
   // Wave — à remplacer dès que le bon fichier est disponible.
-  // FREE_SEN : pas de logo fourni — affichage par initiale en attendant.
 };
 
 function renderOperatorCards() {
@@ -553,14 +635,20 @@ if (form) {
 
     if (!fullName || !email || !phoneRaw) { formNote.textContent = "Merci de remplir tous les champs."; return; }
     if (!isValidEmail(email)) { formNote.textContent = "Adresse e-mail invalide."; return; }
-    const localNumber = normalizeLocalInput(phoneRaw);
+    let localNumber = normalizeLocalInput(phoneRaw);
+    const cty = COUNTRIES[selectedCountry];
+    // Pays où le numéro national s'écrit SANS 0 pour PawaPay (ex. RDC : 243 + 9 chiffres) : on retire un 0 saisi en trop.
+    if (cty.dropZero && localNumber.startsWith("0") && localNumber.length === Math.max(...cty.lens) + 1) localNumber = localNumber.slice(1);
     const dial = COUNTRIES[selectedCountry].dial;
+    // Bénin : depuis 2024 les numéros ont 10 chiffres (01 + 8 chiffres) ; format confirmé par un paiement réel (229 + 0142083499).
+    // Un ancien numéro à 8 chiffres saisi par habitude reçoit automatiquement le préfixe 01.
+    if (cty.addPrefix && localNumber.length === cty.addPrefix.len) localNumber = cty.addPrefix.prefix + localNumber;
     const rule = PHONE_RULES[selectedCountry];
-    if (rule ? (localNumber.length !== rule.length || !localNumber.startsWith("0")) : localNumber.length < 7) {
+    if (rule ? (localNumber.length !== rule.length || !localNumber.startsWith("0")) : (cty.lens ? !cty.lens.includes(localNumber.length) : localNumber.length < 7)) {
       formNote.style.color = "var(--danger)";
       formNote.textContent = rule
         ? `Numéro invalide : il faut ${rule.length} chiffres, en commençant par 0 (ex : 0758356184).`
-        : "Numéro de téléphone invalide.";
+        : (cty.lens ? `Numéro invalide : ${cty.lens.join(" ou ")} chiffres attendus pour ${cty.name} (ex : ${cty.example}).` : "Numéro de téléphone invalide.");
       track("form_error", { field: "phone", country: selectedCountry });
       phoneInput.focus();
       return;
@@ -624,11 +712,11 @@ function showConfirmStep(fields) {
   pay.addEventListener("click", () => {
     if (!check.checked || pay.disabled) return;
     pay.disabled = true;
-    track("confirm_accepted", { plan: plan.key, value: currentPrice(), operator: selectedOperator });
+    track("confirm_accepted", { plan: plan.key, value: refValue(currentPlan().key), operator: selectedOperator });
     runPayment(fields);
   });
   document.getElementById("cfEdit").addEventListener("click", () => { track("confirm_edit", { plan: plan.key }); returnToForm(); });
-  track("confirm_step_shown", { plan: plan.key, value: currentPrice(), currency: "XOF", operator: selectedOperator, mismatch: !!(detected && detected !== selectedOperator) });
+  track("confirm_step_shown", { plan: plan.key, value: refValue(currentPlan().key), currency: "XOF", operator: selectedOperator, mismatch: !!(detected && detected !== selectedOperator) });
   paymentSection?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -637,7 +725,7 @@ async function runPayment({ fullName, email, localNumber, dial }) {
     paymentInFlight = true;
     submitBtn.disabled = true;
     submitBtn.textContent = "Envoi de la demande…";
-    track("payment_started", { program: currentSlug, plan: currentPlan().key, value: currentPrice(), currency: "XOF", operator: selectedOperator, attempt: getFailCount() + 1 });
+    track("payment_started", { program: currentSlug, plan: currentPlan().key, value: refValue(currentPlan().key), currency: "XOF", operator: selectedOperator, attempt: getFailCount() + 1 });
 
     const now = new Date().toISOString();
     const visit = getVisitContext();
@@ -744,7 +832,7 @@ async function runPayment({ fullName, email, localNumber, dial }) {
     }
 
     paymentInFlight = false;
-    track("payment_pending", { program: currentSlug, depositId: initData.depositId, transaction_id: initData.depositId, value: currentPrice(), currency: "XOF", plan: currentPlan().key, operator: selectedOperator });
+    track("payment_pending", { program: currentSlug, depositId: initData.depositId, transaction_id: initData.depositId, value: refValue(currentPlan().key), currency: "XOF", plan: currentPlan().key, operator: selectedOperator });
     startPending({ depositId: initData.depositId, displayPhone, planKey: currentPlan().key, price: currentPrice(), operator: selectedOperator }, isDebug);
 }
 
@@ -754,7 +842,7 @@ async function runPayment({ fullName, email, localNumber, dial }) {
 function getFailCount() { try { return parseInt(sessionStorage.getItem(FAIL_COUNT_KEY) || "0", 10) || 0; } catch (e) { return 0; } }
 function bumpFailCount() { try { sessionStorage.setItem(FAIL_COUNT_KEY, String(getFailCount() + 1)); } catch (e) {} return getFailCount(); }
 function resetFailCount() { try { sessionStorage.removeItem(FAIL_COUNT_KEY); } catch (e) {} }
-function savePending(ctx) { try { localStorage.setItem(PENDING_KEY, JSON.stringify(Object.assign({}, ctx, { ts: Date.now() }))); } catch (e) {} }
+function savePending(ctx) { try { localStorage.setItem(PENDING_KEY, JSON.stringify(Object.assign({}, ctx, { currency: PAYMENT_CURRENCY, country: selectedCountry, ts: Date.now() }))); } catch (e) {} }
 function clearPending() { try { localStorage.removeItem(PENDING_KEY); } catch (e) {} }
 function loadPending() {
   try {
@@ -829,6 +917,10 @@ function showAlreadySubscribedState(plan, expiresAt) {
 function classifyFailure(code, message) {
   const c = String(code || "").toUpperCase();
   const m = String(message || "").toLowerCase();
+  // Codes PawaPay supplémentaires (docs.pawapay.io/v2/docs/failure_codes) : opérateur indisponible, montant hors limites, demande déjà en cours…
+  if (/PROVIDER_TEMPORARILY_UNAVAILABLE|DEPOSITS_NOT_ALLOWED|INVALID_PROVIDER|AMOUNT_OUT_OF_BOUNDS|INVALID_AMOUNT|INVALID_CURRENCY/.test(c)) return "unavailable";
+  if (c.includes("PAYMENT_IN_PROGRESS")) return "inprogress";
+  if (c.includes("INVALID_PHONE_NUMBER")) return "notfound";
   if (c.includes("INSUFFICIENT") || /insufficient|balance|solde/.test(m)) return "balance";
   if (c.includes("PAYER_NOT_FOUND") || /not found|introuvable/.test(m)) return "notfound";
   if (c.includes("LIMIT") || /limit|plafond/.test(m)) return "limit";
@@ -845,6 +937,8 @@ function failureCopy(kind, price, op) {
     cancelled: { title: "Paiement annulé", text: "Vous avez annulé la demande de paiement. Rien n'a été débité. Vous pouvez recommencer quand vous voulez.", retry: "Réessayer" },
     notfound: { title: "Numéro ou opérateur incorrect", text: `Aucun compte ${op} n'a été trouvé pour ce numéro. Vérifiez le numéro et l'opérateur (il peut avoir changé si vous avez conservé votre numéro en changeant d'opérateur).`, retry: "Modifier mon numéro" },
     limit: { title: "Plafond du compte atteint", text: `Le plafond de votre compte ${op} est atteint pour le moment. Réessayez plus tard ou avec un autre numéro.`, retry: "Réessayer" },
+    unavailable: { title: "Moyen de paiement indisponible", text: `Le paiement avec ${op} n'est pas disponible pour le moment. Choisissez un autre opérateur ou réessayez un peu plus tard. Rien n'a été débité.`, retry: "Réessayer" },
+    inprogress: { title: "Une demande est déjà en cours", text: `Une autre demande de paiement est encore en attente sur ce numéro ${op}. Patientez quelques minutes (jusqu'à 10 minutes), puis réessayez. Rien n'a été débité.`, retry: "Réessayer" },
     other: { title: "Paiement non abouti", text: "Le paiement n'a pas pu être confirmé par votre opérateur. Vérifiez votre numéro et votre solde, puis réessayez.", retry: "Réessayer" },
   };
   return map[kind] || map.other;
@@ -856,7 +950,7 @@ function handleFailure(failureReason, ctx) {
   const count = bumpFailCount();
   clearPending();
   track("payment_failed", {
-    program: currentSlug, reason: code || "", reason_type: kind, plan: ctx.planKey, value: ctx.price, currency: "XOF",
+    program: currentSlug, reason: code || "", reason_type: kind, plan: ctx.planKey, value: refValue(ctx.planKey), currency: "XOF",
     operator: ctx.operator || "", attempt: count, depositId: ctx.depositId || "",
   });
   showFailedState(kind, ctx, count);
@@ -934,7 +1028,7 @@ async function pollPaymentStatus(ctx, isDebug) {
 
       if (activePoll !== token) return;
       if (data.status === "COMPLETED") {
-        track("payment_completed", { program: currentSlug, depositId: ctx.depositId, transaction_id: ctx.depositId, value: ctx.price, currency: "XOF", plan: ctx.planKey, operator: ctx.operator || "" });
+        track("payment_completed", { program: currentSlug, depositId: ctx.depositId, transaction_id: ctx.depositId, value: refValue(ctx.planKey), currency: "XOF", plan: ctx.planKey, operator: ctx.operator || "" });
         showSuccessState();
         return;
       }
@@ -1100,7 +1194,18 @@ function renderLandingCopy() {
   if (cta) cta.textContent = `S'abonner — ${amount}`;
 }
 
+// Réponse « Jusqu'à quand dure l'offre ? » : prix dans la monnaie du pays choisi.
+function renderOfferFaq() {
+  const el = document.getElementById("faqOffer");
+  if (!el) return;
+  const f = (k, key) => `${fmtPrice(PLANS[k][key])} ${PAYMENT_CURRENCY_LABEL}`;
+  el.textContent = offerActive()
+    ? `Jusqu'au 31 décembre 2026 (23 h 59, heure d'Abidjan), les trois formules sont proposées à prix réduit : le jour à ${f("jour", "price")} au lieu de ${fmtPrice(PLANS.jour.regularPrice)}, la semaine à ${f("semaine", "price")} au lieu de ${fmtPrice(PLANS.semaine.regularPrice)}, le mois à ${f("mensuel", "price")} au lieu de ${fmtPrice(PLANS.mensuel.regularPrice)}. Passé ce délai, les prix normaux s'appliquent. Avec la formule mensuelle, vos 7 premiers jours sont inclus dans le mois payé.`
+    : `L'offre de lancement est terminée. Prix actuels : le jour ${f("jour", "regularPrice")}, la semaine ${f("semaine", "regularPrice")}, le mois ${f("mensuel", "regularPrice")}. Avec la formule mensuelle, vos 7 premiers jours sont inclus dans le mois payé.`;
+}
+
 function renderPriceDisplays() {
+  renderOfferFaq();
   const plan = currentPlan();
   const price = currentPrice();
   const active = offerActive();
@@ -1135,7 +1240,7 @@ function renderPriceDisplays() {
   if (hubSub && !singleMode()) {
     hubSub.textContent = active
       ? "Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Offre de lancement : jusqu'à −50 %, valable jusqu'au 31 décembre. Sans engagement."
-      : "Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Dès 300 FCFA, sans engagement.";
+      : `Rosalinda, Marimar, Cœurs brûlants et bien d'autres. Dès ${fmtPrice(planPrice(PLANS.jour))} ${PAYMENT_CURRENCY_LABEL}, sans engagement.`;
   }
   const pricingHeading = document.querySelector(".pricing-section .section-heading");
   if (pricingHeading) pricingHeading.textContent = singleMode() ? "Votre formule" : "Choisissez votre formule";
@@ -1252,6 +1357,10 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(tickOffer, 1000);
   renderCountrySelect();
   renderOperatorCards();
+  // Lien de campagne avec ?pays=cd (ci, bj, sn, cm, cd, cg, ga) : le pays de l'annonce prime sur la détection automatique.
+  const paysParam = ISO2_TO_ISO3[(new URLSearchParams(window.location.search).get("pays") || "").toUpperCase()];
+  if (paysParam) { countryTouched = true; applyCountry(paysParam); }
+  detectCountry();
   renderProgramPage();
   setupSoundToggle("hubHeroVideo", "hubSoundToggle");
   setupSoundToggle("heroVideo", "heroSoundToggle");
@@ -1260,6 +1369,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Reprise : le client a quitté la page (appli Mobile Money, rechargement…) pendant une demande en cours.
   const pending = loadPending();
   if (pending && stepStatus) {
+    if (pending.country && COUNTRIES[pending.country]) { countryTouched = true; applyCountry(pending.country); } // reprise : pays et monnaie du paiement en cours
     if (pending.planKey && PLANS[pending.planKey]) selectPlan(pending.planKey);
     track("payment_resumed", { program: currentSlug, depositId: pending.depositId, source: "reload" });
     showPendingState(pending);
